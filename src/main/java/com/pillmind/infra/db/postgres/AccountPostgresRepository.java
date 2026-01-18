@@ -1,14 +1,14 @@
 package com.pillmind.infra.db.postgres;
 
-import com.pillmind.data.protocols.db.AddAccountRepository;
-import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
-import com.pillmind.domain.models.Account;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
+
+import com.pillmind.data.protocols.db.AddAccountRepository;
+import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
+import com.pillmind.domain.models.Account;
 
 /**
  * Implementação do repositório de Account usando PostgreSQL
@@ -34,6 +34,8 @@ public class AccountPostgresRepository extends PostgresRepository
       stmt.executeUpdate();
       return account;
     } catch (SQLException e) {
+      System.err.println("SQL Error adding account: " + e.getMessage());
+      e.printStackTrace();
       throw new RuntimeException("Error adding account", e);
     }
   }
@@ -52,8 +54,7 @@ public class AccountPostgresRepository extends PostgresRepository
               rs.getString("name"),
               rs.getString("email"),
               rs.getString("password"),
-              rs.getBoolean("google_account")
-          ));
+              rs.getBoolean("google_account")));
         }
         return Optional.empty();
       }

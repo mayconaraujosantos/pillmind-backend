@@ -52,3 +52,9 @@ Managed via ConfigMap and Secret. Update values in:
 
 - `k8s/base/configmap.yaml` (non-sensitive)
 - `k8s/base/secret.yaml` (sensitive - use sealed-secrets or external secrets in production)
+
+
+sudo cp demo-tls.crt /etc/ca-certificates/trust-source/anchors/
+sudo trust extract-compat
+
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain demo-tls.crt
