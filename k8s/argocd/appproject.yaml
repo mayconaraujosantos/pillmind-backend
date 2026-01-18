@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: pillmind
+  namespace: argocd
+spec:
+  description: PillMind Backend Project
+  sourceRepos:
+    - "*"
+  destinations:
+    - namespace: "pillmind-*"
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"

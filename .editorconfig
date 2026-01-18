@@ -1,0 +1,58 @@
+# EditorConfig for consistent coding styles
+# https://editorconfig.org
+
+root = true
+
+# All files
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Java files
+[*.java]
+indent_style = space
+indent_size = 2
+max_line_length = 120
+
+# JavaScript/TypeScript files
+[*.{js,jsx,ts,tsx}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# JSON files
+[*.{json,jsonc}]
+indent_style = space
+indent_size = 2
+
+# YAML files
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Gradle files
+[*.gradle]
+indent_style = space
+indent_size = 2
+
+# Markdown files
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# XML files
+[*.xml]
+indent_style = space
+indent_size = 2
+
+# HTML files
+[*.html]
+indent_style = space
+indent_size = 2
+
+# CSS/SCSS files
+[*.{css,scss,less}]
+indent_style = space
+indent_size = 2

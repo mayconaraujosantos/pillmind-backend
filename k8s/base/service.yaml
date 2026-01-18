@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: pillmind-backend
+  namespace: pillmind-dev
+  labels:
+    app: pillmind-backend
+spec:
+  type: ClusterIP
+  selector:
+    app: pillmind-backend
+  ports:
+    - port: 80
+      targetPort: 8080
+      protocol: TCP
+      name: http

@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pillmind-backend
+  namespace: pillmind-dev
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - pillmind.192.168.1.7.nip.io
+      secretName: pillmind-tls
+  rules:
+    - host: pillmind.192.168.1.7.nip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pillmind-backend
+                port:
+                  number: 80

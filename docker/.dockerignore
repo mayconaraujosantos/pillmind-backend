@@ -1,0 +1,17 @@
+# Ignore files for Docker builds
+.git
+.gitignore
+README.md
+docs/
+.vscode/
+.idea/
+*.iml
+build/
+.gradle/
+bin/
+out/
+*.log
+docker-compose.yml
+docker/
+Dockerfile
+.dockerignore

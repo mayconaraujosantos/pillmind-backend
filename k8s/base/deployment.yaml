@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pillmind-backend
+  namespace: pillmind-dev
+  labels:
+    app: pillmind-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: pillmind-backend
+  template:
+    metadata:
+      labels:
+        app: pillmind-backend
+    spec:
+      containers:
+        - name: backend
+          image: pillmind-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          env:
+            - name: PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: pillmind-config
+                  key: PORT
+            - name: DATABASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: pillmind-config
+                  key: DATABASE_URL
+            - name: DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: pillmind-secrets
+                  key: DATABASE_USER
+            - name: DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pillmind-secrets
+                  key: DATABASE_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: pillmind-secrets
+                  key: JWT_SECRET
+            - name: JWT_EXPIRATION_IN_MS
+              valueFrom:
+                configMapKeyRef:
+                  name: pillmind-config
+                  key: JWT_EXPIRATION_IN_MS
+            - name: BCRYPT_SALT_ROUNDS
+              valueFrom:
+                configMapKeyRef:
+                  name: pillmind-config
+                  key: BCRYPT_SALT_ROUNDS
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"

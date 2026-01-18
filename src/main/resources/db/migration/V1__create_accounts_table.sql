@@ -1,0 +1,12 @@
+-- Migration: Create accounts table
+CREATE TABLE IF NOT EXISTS accounts (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255),
+    google_account BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email);
