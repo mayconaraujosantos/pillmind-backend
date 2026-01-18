@@ -9,6 +9,8 @@ KIND_CLUSTER := pillmind
 IMAGE := pillmind-backend:latest
 DOCKERFILE := docker/Dockerfile
 DOMAIN := pillmind.192.168.1.7.nip.io
+TLS_SECRET := pillmind-tls
+CERT_DIR := certs
 
 # Default target
 .PHONY: help
@@ -28,6 +30,9 @@ help:
 	@echo "make curl-swagger      - Check Swagger UI via ingress"
 	@echo "make hash PASSWORD=... - Generate BCrypt hash for a password"
 	@echo "make redeploy          - Build, load to kind, and restart pods"
+	@echo "make tls-generate      - Generate self-signed TLS cert/key (dev)"
+	@echo "make tls-apply         - Create/Update Kubernetes TLS secret"
+	@echo "make tls-delete        - Delete Kubernetes TLS secret"
 
 .PHONY: build
 build:
@@ -81,3 +86,26 @@ hash:
 .PHONY: redeploy
 redeploy: docker-build kind-load k8s-delete-pods
 	@echo "Redeploy triggered: image built, loaded to kind, pods restarted."
+
+.PHONY: tls-generate
+tls-generate:
+	mkdir -p $(CERT_DIR)
+	openssl req -x509 -nodes -newkey rsa:2048 -days 365 \
+	  -subj "/CN=$(DOMAIN)" \
+	  -addext "subjectAltName=DNS:$(DOMAIN)" \
+	  -keyout $(CERT_DIR)/$(TLS_SECRET).key \
+	  -out $(CERT_DIR)/$(TLS_SECRET).crt
+	@echo "Generated $(CERT_DIR)/$(TLS_SECRET).crt and .key for $(DOMAIN)"
+
+.PHONY: tls-apply
+tls-apply:
+	kubectl -n $(NAMESPACE) create secret tls $(TLS_SECRET) \
+	  --cert=$(CERT_DIR)/$(TLS_SECRET).crt \
+	  --key=$(CERT_DIR)/$(TLS_SECRET).key \
+	  --dry-run=client -o yaml | kubectl apply -f -
+	@echo "Applied TLS secret '$(TLS_SECRET)' in namespace '$(NAMESPACE)'"
+
+.PHONY: tls-delete
+tls-delete:
+	kubectl -n $(NAMESPACE) delete secret $(TLS_SECRET) || true
+	@echo "Deleted TLS secret '$(TLS_SECRET)' (if existed)"
