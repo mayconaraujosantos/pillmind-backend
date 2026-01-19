@@ -1,12 +1,12 @@
 package com.pillmind.data.usecases;
 
+import java.util.UUID;
+
 import com.pillmind.data.protocols.cryptography.Hasher;
 import com.pillmind.data.protocols.db.AddAccountRepository;
 import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
 import com.pillmind.domain.models.Account;
 import com.pillmind.domain.usecases.AddAccount;
-
-import java.util.UUID;
 
 /**
  * Implementação do caso de uso AddAccount
@@ -19,8 +19,7 @@ public class DbAddAccount extends DbUseCase implements AddAccount {
   public DbAddAccount(
       Hasher hasher,
       AddAccountRepository addAccountRepository,
-      LoadAccountByEmailRepository loadAccountByEmailRepository
-  ) {
+      LoadAccountByEmailRepository loadAccountByEmailRepository) {
     this.hasher = hasher;
     this.addAccountRepository = addAccountRepository;
     this.loadAccountByEmailRepository = loadAccountByEmailRepository;
@@ -30,11 +29,11 @@ public class DbAddAccount extends DbUseCase implements AddAccount {
   public Account execute(Params params) {
     var existingAccount = loadAccountByEmailRepository.loadByEmail(params.email());
     if (existingAccount.isPresent()) {
-      throw new RuntimeException("Email already exists");
+      throw new RuntimeException("Este email já está cadastrado. Use outro email ou faça login.");
     }
 
-    var hashedPassword = params.googleAccount() 
-        ? null 
+    var hashedPassword = params.googleAccount()
+        ? null
         : hasher.hash(params.password());
 
     var account = new Account(
@@ -42,8 +41,7 @@ public class DbAddAccount extends DbUseCase implements AddAccount {
         params.name(),
         params.email(),
         hashedPassword,
-        params.googleAccount()
-    );
+        params.googleAccount());
 
     return addAccountRepository.add(account);
   }

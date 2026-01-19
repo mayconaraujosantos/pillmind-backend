@@ -1,13 +1,18 @@
 package com.pillmind.presentation.helpers;
 
-import io.javalin.http.Context;
-
 import java.util.Map;
+
+import io.javalin.http.Context;
 
 /**
  * Helper para criar respostas HTTP padronizadas
  */
 public class HttpHelper {
+    private static final String ERROR_KEY = "error";
+
+    private HttpHelper() {
+    }
+
     public static void ok(Context ctx, Object data) {
         ctx.status(200).json(data);
     }
@@ -21,26 +26,26 @@ public class HttpHelper {
     }
 
     public static void badRequest(Context ctx, String message) {
-        ctx.status(400).json(Map.of("error", message));
+        ctx.status(400).json(Map.of(ERROR_KEY, message));
     }
 
     public static void unauthorized(Context ctx, String message) {
-        ctx.status(401).json(Map.of("error", message));
+        ctx.status(401).json(Map.of(ERROR_KEY, message));
     }
 
     public static void forbidden(Context ctx, String message) {
-        ctx.status(403).json(Map.of("error", message));
+        ctx.status(403).json(Map.of(ERROR_KEY, message));
     }
 
     public static void notFound(Context ctx, String message) {
-        ctx.status(404).json(Map.of("error", message));
+        ctx.status(404).json(Map.of(ERROR_KEY, message));
     }
 
     public static void conflict(Context ctx, String message) {
-        ctx.status(409).json(Map.of("error", message));
+        ctx.status(409).json(Map.of(ERROR_KEY, message));
     }
 
     public static void serverError(Context ctx, String message) {
-        ctx.status(500).json(Map.of("error", message));
+        ctx.status(500).json(Map.of(ERROR_KEY, message));
     }
 }

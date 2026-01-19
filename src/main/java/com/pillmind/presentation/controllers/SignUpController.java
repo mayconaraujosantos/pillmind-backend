@@ -1,16 +1,21 @@
 package com.pillmind.presentation.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pillmind.domain.usecases.AddAccount;
 import com.pillmind.presentation.helpers.HttpHelper;
 import com.pillmind.presentation.protocols.Controller;
 import com.pillmind.presentation.protocols.Validation;
+
 import io.javalin.http.Context;
 
 /**
  * Controller para Sign Up (cadastro de usuário)
  */
 public class SignUpController implements Controller {
+  private static final Logger logger = LoggerFactory.getLogger(SignUpController.class);
   private final AddAccount addAccount;
   private final Validation<SignUpRequest> validation;
   private final ObjectMapper objectMapper;
@@ -32,8 +37,7 @@ public class SignUpController implements Controller {
           request.name(),
           request.email(),
           request.password(),
-          request.googleAccount() != null && request.googleAccount()
-      );
+          request.googleAccount() != null && request.googleAccount());
 
       var account = addAccount.execute(params);
 
@@ -41,12 +45,12 @@ public class SignUpController implements Controller {
           account.id(),
           account.name(),
           account.email(),
-          account.googleAccount()
-      ));
+          account.googleAccount()));
     } catch (RuntimeException e) {
       HttpHelper.badRequest(ctx, e.getMessage());
     } catch (Exception e) {
-      HttpHelper.serverError(ctx, "Internal server error");
+      logger.error("Unexpected error in SignUpController: {}", e.getMessage(), e);
+      HttpHelper.serverError(ctx, "Erro interno do servidor");
     }
   }
 
@@ -54,13 +58,13 @@ public class SignUpController implements Controller {
       String name,
       String email,
       String password,
-      Boolean googleAccount
-  ) {}
+      Boolean googleAccount) {
+  }
 
   public record SignUpResponse(
       String id,
       String name,
       String email,
-      boolean googleAccount
-  ) {}
+      boolean googleAccount) {
+  }
 }

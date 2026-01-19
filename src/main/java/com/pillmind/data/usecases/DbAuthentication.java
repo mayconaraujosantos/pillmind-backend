@@ -16,8 +16,7 @@ public class DbAuthentication extends DbUseCase implements Authentication {
   public DbAuthentication(
       LoadAccountByEmailRepository loadAccountByEmailRepository,
       HashComparer hashComparer,
-      Encrypter encrypter
-  ) {
+      Encrypter encrypter) {
     this.loadAccountByEmailRepository = loadAccountByEmailRepository;
     this.hashComparer = hashComparer;
     this.encrypter = encrypter;
@@ -26,15 +25,24 @@ public class DbAuthentication extends DbUseCase implements Authentication {
   @Override
   public Result execute(Params params) {
     var account = loadAccountByEmailRepository.loadByEmail(params.email())
-        .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+        .orElseThrow(() -> new RuntimeException("Email ou senha inválidos"));
 
+    // Se for conta Google, valida de forma diferente
     if (account.googleAccount()) {
-      throw new RuntimeException("Google accounts must use Google Sign In");
+      // Se o password for null, é um login OAuth2 válido
+      if (params.password() == null) {
+        var accessToken = encrypter.encrypt(account.id());
+        return new Result(accessToken, account.id());
+      }
+      // Se enviou senha, mas é conta Google, rejeita
+      throw new RuntimeException("Esta conta usa login do Google. Use 'Entrar com Google'");
     }
 
-    if (account.password() == null ||
+    // Conta tradicional - valida senha
+    if (params.password() == null ||
+        account.password() == null ||
         !hashComparer.compare(params.password(), account.password())) {
-      throw new RuntimeException("Invalid credentials");
+      throw new RuntimeException("Email ou senha inválidos");
     }
 
     var accessToken = encrypter.encrypt(account.id());
