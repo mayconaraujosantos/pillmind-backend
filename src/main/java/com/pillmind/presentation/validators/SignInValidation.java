@@ -17,14 +17,13 @@ public class SignInValidation implements Validation<SignInController.SignInReque
       throw new RuntimeException("O campo 'password' é obrigatório");
     }
 
-    // Validação opcional de formato de email
+    // Validação de formato de email
     if (!EmailValidator.isValid(input.email())) {
       throw new RuntimeException("Formato de email inválido");
     }
 
-    // Validação opcional de tamanho mínimo da senha
-    if (input.password().length() < 6) {
-      throw new RuntimeException("A senha deve ter no mínimo 6 caracteres");
-    }
+    // ⚠️ SECURITY: Não validamos regras de negócio (tamanho da senha) no SignIn
+    // para evitar user enumeration. Credenciais inválidas serão tratadas de
+    // forma genérica pelo Authentication use case.
   }
 }
