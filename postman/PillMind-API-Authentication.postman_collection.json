@@ -1,0 +1,99 @@
+{
+  "info": {
+    "name": "PillMind API - Authentication",
+    "description": "Coleção de endpoints de autenticação do PillMind",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Signup - Cadastro de Usuário",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123\",\n  \"passwordConfirmation\": \"senha123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/signup",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "signup"]
+        },
+        "description": "Endpoint para cadastro de novo usuário"
+      },
+      "response": []
+    },
+    {
+      "name": "Login - Autenticação",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const responseJson = pm.response.json();",
+              "    pm.collectionVariables.set('accessToken', responseJson.accessToken);",
+              "    console.log('Token salvo:', responseJson.accessToken);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"joao@example.com\",\n  \"password\": \"senha123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "login"]
+        },
+        "description": "Endpoint para login de usuário. Salva automaticamente o token de acesso."
+      },
+      "response": []
+    },
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "health"]
+        },
+        "description": "Verifica se a API está funcionando"
+      },
+      "response": []
+    }
+  ]
+}

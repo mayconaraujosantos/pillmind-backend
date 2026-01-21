@@ -1,4 +1,15 @@
-# Gradle
+# Ignore local certificates and keys (manage via k8s secret)
+certs/
+*.key
+*.crt
+
+# Gradle and build outputs
+.gradle/
+build/
+
+# IDE/editor
+.vscode/
+.idea/# Gradle
 .gradle/
 build/
 bin/

@@ -1,0 +1,183 @@
+{
+  "info": {
+    "name": "PillMind API - Nearby Services",
+    "description": "Coleção de endpoints para busca de serviços próximos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "latitude",
+      "value": "-23.550520",
+      "type": "string"
+    },
+    {
+      "key": "longitude",
+      "value": "-46.633308",
+      "type": "string"
+    },
+    {
+      "key": "radius",
+      "value": "5",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Buscar Hospitais Próximos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/nearby/hospitals?latitude={{latitude}}&longitude={{longitude}}&radius={{radius}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "nearby", "hospitals"],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{latitude}}",
+              "description": "Latitude atual"
+            },
+            {
+              "key": "longitude",
+              "value": "{{longitude}}",
+              "description": "Longitude atual"
+            },
+            {
+              "key": "radius",
+              "value": "{{radius}}",
+              "description": "Raio de busca em km (default: 5)"
+            }
+          ]
+        },
+        "description": "Busca hospitais próximos à localização informada"
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Clínicas Próximas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/nearby/clinics?latitude={{latitude}}&longitude={{longitude}}&radius={{radius}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "nearby", "clinics"],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{latitude}}",
+              "description": "Latitude atual"
+            },
+            {
+              "key": "longitude",
+              "value": "{{longitude}}",
+              "description": "Longitude atual"
+            },
+            {
+              "key": "radius",
+              "value": "{{radius}}",
+              "description": "Raio de busca em km (default: 5)"
+            }
+          ]
+        },
+        "description": "Busca clínicas próximas à localização informada"
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Farmácias Próximas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/nearby/pharmacies?latitude={{latitude}}&longitude={{longitude}}&radius={{radius}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "nearby", "pharmacies"],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{latitude}}",
+              "description": "Latitude atual"
+            },
+            {
+              "key": "longitude",
+              "value": "{{longitude}}",
+              "description": "Longitude atual"
+            },
+            {
+              "key": "radius",
+              "value": "{{radius}}",
+              "description": "Raio de busca em km (default: 5)"
+            }
+          ]
+        },
+        "description": "Busca farmácias próximas à localização informada"
+      },
+      "response": []
+    },
+    {
+      "name": "Buscar Todos os Serviços Próximos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/nearby/all?latitude={{latitude}}&longitude={{longitude}}&radius={{radius}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "nearby", "all"],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{latitude}}",
+              "description": "Latitude atual"
+            },
+            {
+              "key": "longitude",
+              "value": "{{longitude}}",
+              "description": "Longitude atual"
+            },
+            {
+              "key": "radius",
+              "value": "{{radius}}",
+              "description": "Raio de busca em km (default: 5)"
+            }
+          ]
+        },
+        "description": "Busca todos os serviços (hospitais, clínicas, farmácias) próximos à localização informada"
+      },
+      "response": []
+    }
+  ]
+}

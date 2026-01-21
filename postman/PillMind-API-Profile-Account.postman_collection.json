@@ -1,0 +1,116 @@
+{
+  "info": {
+    "name": "PillMind API - Profile & Account",
+    "description": "Coleção de endpoints para perfil e conta do usuário",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Obter Perfil do Usuário",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "profile"]
+        },
+        "description": "Obtém dados do perfil do usuário autenticado"
+      },
+      "response": []
+    },
+    {
+      "name": "Atualizar Perfil",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"João Silva Santos\",\n  \"email\": \"joao.santos@example.com\",\n  \"phone\": \"(11) 98765-4321\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/profile",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "profile"]
+        },
+        "description": "Atualiza dados do perfil do usuário"
+      },
+      "response": []
+    },
+    {
+      "name": "Enviar Feedback",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"Ótimo aplicativo, muito útil para gerenciar medicamentos!\",\n  \"rating\": 5\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/feedback",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "feedback"]
+        },
+        "description": "Envia feedback sobre o aplicativo"
+      },
+      "response": []
+    },
+    {
+      "name": "Obter Informações de Suporte",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/helpline",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "helpline"]
+        },
+        "description": "Obtém informações de helpline/suporte"
+      },
+      "response": []
+    }
+  ]
+}

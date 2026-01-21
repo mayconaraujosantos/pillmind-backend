@@ -25,7 +25,11 @@ dependencies {
 
     // Web Framework
     implementation("io.javalin:javalin:6.0.0")
-    implementation("org.slf4j:slf4j-simple:2.0.7")
+    implementation("org.slf4j:slf4j-api:2.0.7")
+    implementation("ch.qos.logback:logback-classic:1.4.11")
+    
+    // OpenAPI/Swagger
+    implementation("io.javalin:javalin-bundle:6.0.0")
 
     // Database
     implementation("org.postgresql:postgresql:42.6.0")
@@ -47,8 +51,9 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-jackson:0.11.5")
     implementation("org.mindrot:jbcrypt:0.4")
 
-    // Documentation
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0")
+    // Google OAuth2
+    implementation("com.google.api-client:google-api-client:2.2.0")
+    implementation("com.google.http-client:google-http-client-jackson2:1.43.3")
 
     // Caching (opcional)
     implementation("redis.clients:jedis:4.4.3")
@@ -58,6 +63,10 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation("io.javalin:javalin-testtools:6.0.0")
     testImplementation("org.mockito:mockito-core:5.5.0")
+    
+    // H2 para testes em memória (rápido e leve)
+    testImplementation("com.h2database:h2:2.2.224")
+    
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 
@@ -100,4 +109,5 @@ jar {
     from {
         configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
     }
+    exclude 'META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA'
 }

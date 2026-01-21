@@ -2,7 +2,6 @@ package com.pillmind.presentation.validators;
 
 import com.pillmind.infra.validators.EmailValidator;
 import com.pillmind.presentation.controllers.SignInController;
-import com.pillmind.presentation.controllers.SignUpController;
 import com.pillmind.presentation.protocols.Validation;
 
 public class SignInValidation implements Validation<SignInController.SignInRequest> {
@@ -11,21 +10,20 @@ public class SignInValidation implements Validation<SignInController.SignInReque
   public void validate(SignInController.SignInRequest input) {
     // Validação básica de campos obrigatórios
     if (input.email() == null || input.email().isBlank()) {
-      throw new RuntimeException("Email is required");
+      throw new RuntimeException("O campo 'email' é obrigatório");
     }
 
     if (input.password() == null || input.password().isBlank()) {
-      throw new RuntimeException("Password is required");
+      throw new RuntimeException("O campo 'password' é obrigatório");
     }
 
-    // Validação opcional de formato de email
+    // Validação de formato de email
     if (!EmailValidator.isValid(input.email())) {
-      throw new RuntimeException("Invalid email format");
+      throw new RuntimeException("Formato de email inválido");
     }
 
-    // Validação opcional de tamanho mínimo da senha
-    if (input.password().length() < 6) {
-      throw new RuntimeException("Password must be at least 6 characters");
-    }
+    // ⚠️ SECURITY: Não validamos regras de negócio (tamanho da senha) no SignIn
+    // para evitar user enumeration. Credenciais inválidas serão tratadas de
+    // forma genérica pelo Authentication use case.
   }
 }

@@ -6,5 +6,5 @@ import io.javalin.Javalin;
  * Interface base para configuração de rotas
  */
 public interface Routes {
-    void setup(Javalin app);
+    void setup(Javalin app) throws Exception;
 }

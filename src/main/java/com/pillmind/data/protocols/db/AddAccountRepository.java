@@ -7,4 +7,6 @@ import com.pillmind.domain.models.Account;
  */
 public interface AddAccountRepository {
   Account add(Account account);
+
+  Account update(Account account);
 }

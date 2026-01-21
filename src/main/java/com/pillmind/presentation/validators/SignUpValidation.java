@@ -11,25 +11,25 @@ public class SignUpValidation implements Validation<SignUpController.SignUpReque
   @Override
   public void validate(SignUpController.SignUpRequest input) {
     if (input.name() == null || input.name().isBlank()) {
-      throw new RuntimeException("Name is required");
+      throw new RuntimeException("O campo 'name' é obrigatório");
     }
 
     if (input.email() == null || input.email().isBlank()) {
-      throw new RuntimeException("Email is required");
+      throw new RuntimeException("O campo 'email' é obrigatório");
     }
 
     if (!EmailValidator.isValid(input.email())) {
-      throw new RuntimeException("Invalid email format");
+      throw new RuntimeException("Formato de email inválido");
     }
 
     // Se não for conta Google, senha é obrigatória
     if ((input.googleAccount() == null || !input.googleAccount()) &&
         (input.password() == null || input.password().isBlank())) {
-      throw new RuntimeException("Password is required");
+      throw new RuntimeException("O campo 'password' é obrigatório");
     }
 
     if (input.password() != null && input.password().length() < 6) {
-      throw new RuntimeException("Password must be at least 6 characters");
+      throw new RuntimeException("A senha deve ter no mínimo 6 caracteres");
     }
   }
 }

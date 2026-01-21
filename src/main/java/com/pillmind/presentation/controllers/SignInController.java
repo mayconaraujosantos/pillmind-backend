@@ -1,23 +1,27 @@
 package com.pillmind.presentation.controllers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pillmind.domain.usecases.Authentication;
 import com.pillmind.presentation.helpers.HttpHelper;
 import com.pillmind.presentation.protocols.Controller;
-import com.pillmind.presentation.validators.SignInValidation;
-import com.pillmind.presentation.validators.SignUpValidation;
+import com.pillmind.presentation.protocols.Validation;
+
 import io.javalin.http.Context;
 
 /**
  * Controller para Sign In (autenticação de usuário)
  */
 public class SignInController implements Controller {
+  private static final Logger logger = LoggerFactory.getLogger(SignInController.class);
   private final Authentication authentication;
   private final ObjectMapper objectMapper;
-  private final SignInValidation validator;
+  private final Validation<SignInRequest> validator;
 
-  public SignInController(Authentication authentication, SignInValidation validator) {
+  public SignInController(Authentication authentication, Validation<SignInRequest> validator) {
     this.authentication = authentication;
     this.validator = validator;
     this.objectMapper = new ObjectMapper();
@@ -35,21 +39,26 @@ public class SignInController implements Controller {
 
       HttpHelper.ok(ctx, new SignInResponse(result.accessToken(), result.accountId()));
     } catch (JsonProcessingException e) {
-      // Captura erros de JSON inválido
-      HttpHelper.badRequest(ctx, "Invalid JSON format");
+      logger.warn("Invalid JSON format in SignInController: {}", e.getMessage());
+      HttpHelper.badRequest(ctx, "Formato JSON inválido na requisição");
     } catch (RuntimeException e) {
-      if (e.getMessage().contains("Invalid credentials") ||
-          e.getMessage().contains("Google accounts")) {
+      // Erros de autenticação (credenciais inválidas ou conta Google)
+      if (e.getMessage().contains("inválidos") ||
+          e.getMessage().contains("Google")) {
         HttpHelper.unauthorized(ctx, e.getMessage());
       } else {
+        // Erros de validação
         HttpHelper.badRequest(ctx, e.getMessage());
       }
     } catch (Exception e) {
-      HttpHelper.serverError(ctx, "Internal server error");
+      logger.error("Unexpected error in SignInController: {}", e.getMessage(), e);
+      HttpHelper.serverError(ctx, "Erro interno do servidor");
     }
   }
 
-  public record SignInRequest(String email, String password) {}
+  public record SignInRequest(String email, String password) {
+  }
 
-  public record SignInResponse(String accessToken, String accountId) {}
+  public record SignInResponse(String accessToken, String accountId) {
+  }
 }
