@@ -10,6 +10,8 @@ public interface AddAccount extends UseCase<AddAccount.Params, Account> {
       String name,
       String email,
       String password,
-      boolean googleAccount
-  ) {}
+      boolean googleAccount,
+      String googleId,
+      String pictureUrl) {
+  }
 }
