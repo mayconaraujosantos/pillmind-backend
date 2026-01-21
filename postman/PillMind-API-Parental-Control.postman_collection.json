@@ -1,0 +1,227 @@
+{
+  "info": {
+    "name": "PillMind API - Parental Control",
+    "description": "Coleção de endpoints para controle parental",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "parentalCode",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "childId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Gerar Código Parental",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const responseJson = pm.response.json();",
+              "    if (responseJson.code) {",
+              "        pm.collectionVariables.set('parentalCode', responseJson.code);",
+              "        console.log('Código parental salvo:', responseJson.code);",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/generate-code",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "generate-code"]
+        },
+        "description": "Gera código parental para compartilhar com conta monitorada"
+      },
+      "response": []
+    },
+    {
+      "name": "Vincular Conta Monitorada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"parentalCode\": \"{{parentalCode}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/link",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "link"]
+        },
+        "description": "Vincula conta de filho usando código parental"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Contas Monitoradas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/monitored-accounts",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "monitored-accounts"]
+        },
+        "description": "Lista contas monitoradas (para pais)"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Medicamentos de Conta Monitorada",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/monitored-accounts/{{childId}}/medicines",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "monitored-accounts", "{{childId}}", "medicines"]
+        },
+        "description": "Lista medicamentos de uma conta monitorada"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Consultas de Conta Monitorada",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/monitored-accounts/{{childId}}/appointments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "monitored-accounts", "{{childId}}", "appointments"]
+        },
+        "description": "Lista consultas de uma conta monitorada"
+      },
+      "response": []
+    },
+    {
+      "name": "Adicionar Medicamento para Conta Monitorada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Vitamina D\",\n  \"dosage\": \"1000UI\",\n  \"frequency\": \"1 vez ao dia\",\n  \"instructions\": \"Tomar com a refeição\",\n  \"startDate\": \"2026-01-20T08:00:00\",\n  \"endDate\": \"2026-02-20T08:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/monitored-accounts/{{childId}}/medicines",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "monitored-accounts", "{{childId}}", "medicines"]
+        },
+        "description": "Adiciona medicamento para conta monitorada (pai adicionando para filho)"
+      },
+      "response": []
+    },
+    {
+      "name": "Agendar Consulta para Conta Monitorada",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"doctorName\": \"Dra. Maria Pediatra\",\n  \"specialty\": \"Pediatria\",\n  \"location\": \"Clínica Infantil - Sala 102\",\n  \"dateTime\": \"2026-01-25T10:00:00\",\n  \"notes\": \"Consulta de rotina\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/monitored-accounts/{{childId}}/appointments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "monitored-accounts", "{{childId}}", "appointments"]
+        },
+        "description": "Agenda consulta para conta monitorada"
+      },
+      "response": []
+    },
+    {
+      "name": "Desvincular Conta Monitorada",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/parental/unlink/{{childId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "parental", "unlink", "{{childId}}"]
+        },
+        "description": "Desvincula conta monitorada"
+      },
+      "response": []
+    }
+  ]
+}

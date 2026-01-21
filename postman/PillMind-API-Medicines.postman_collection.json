@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "PillMind API - Medicines",
+    "description": "Coleção de endpoints para gerenciamento de medicamentos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "medicineId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Adicionar Medicamento",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const responseJson = pm.response.json();",
+              "    if (responseJson.id) {",
+              "        pm.collectionVariables.set('medicineId', responseJson.id);",
+              "        console.log('Medicine ID salvo:', responseJson.id);",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Paracetamol\",\n  \"dosage\": \"500mg\",\n  \"frequency\": \"A cada 8 horas\",\n  \"instructions\": \"Tomar após as refeições\",\n  \"startDate\": \"2026-01-07T08:00:00\",\n  \"endDate\": \"2026-01-17T08:00:00\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/medicines",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "medicines"]
+        },
+        "description": "Adiciona um novo medicamento"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Medicamentos",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/medicines",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "medicines"]
+        },
+        "description": "Lista todos os medicamentos do usuário"
+      },
+      "response": []
+    },
+    {
+      "name": "Obter Medicamento por ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/medicines/{{medicineId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "medicines", "{{medicineId}}"]
+        },
+        "description": "Obtém detalhes de um medicamento específico"
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Medicamento",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Paracetamol\",\n  \"dosage\": \"750mg\",\n  \"frequency\": \"A cada 6 horas\",\n  \"instructions\": \"Tomar com água\",\n  \"startDate\": \"2026-01-07T08:00:00\",\n  \"endDate\": \"2026-01-17T08:00:00\",\n  \"active\": true\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/medicines/{{medicineId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "medicines", "{{medicineId}}"]
+        },
+        "description": "Edita um medicamento existente"
+      },
+      "response": []
+    },
+    {
+      "name": "Deletar Medicamento",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/medicines/{{medicineId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "medicines", "{{medicineId}}"]
+        },
+        "description": "Remove um medicamento"
+      },
+      "response": []
+    }
+  ]
+}

@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "PillMind API - Appointments",
+    "description": "Coleção de endpoints para gerenciamento de consultas médicas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "appointmentId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Agendar Consulta",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const responseJson = pm.response.json();",
+              "    if (responseJson.id) {",
+              "        pm.collectionVariables.set('appointmentId', responseJson.id);",
+              "        console.log('Appointment ID salvo:', responseJson.id);",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"doctorName\": \"Dr. João Cardiologista\",\n  \"specialty\": \"Cardiologia\",\n  \"location\": \"Hospital São Lucas - Sala 305\",\n  \"dateTime\": \"2026-01-15T14:30:00\",\n  \"notes\": \"Levar exames anteriores\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/appointments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "appointments"]
+        },
+        "description": "Agenda uma nova consulta médica"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Consultas",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/appointments",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "appointments"]
+        },
+        "description": "Lista todas as consultas do usuário"
+      },
+      "response": []
+    },
+    {
+      "name": "Obter Consulta por ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "appointments", "{{appointmentId}}"]
+        },
+        "description": "Obtém detalhes de uma consulta específica"
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Consulta",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"doctorName\": \"Dr. João Cardiologista\",\n  \"specialty\": \"Cardiologia\",\n  \"location\": \"Hospital São Lucas - Sala 305\",\n  \"dateTime\": \"2026-01-15T15:00:00\",\n  \"notes\": \"Levar exames de sangue\",\n  \"status\": \"SCHEDULED\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "appointments", "{{appointmentId}}"]
+        },
+        "description": "Edita uma consulta existente"
+      },
+      "response": []
+    },
+    {
+      "name": "Cancelar Consulta",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/appointments/{{appointmentId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "appointments", "{{appointmentId}}"]
+        },
+        "description": "Cancela uma consulta"
+      },
+      "response": []
+    }
+  ]
+}

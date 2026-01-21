@@ -1,0 +1,162 @@
+{
+  "info": {
+    "name": "PillMind API - Reminders",
+    "description": "Coleção de endpoints para gerenciamento de lembretes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://192.168.1.7:7000",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "reminderId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "medicineId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "auth": {
+    "type": "noauth"
+  },
+  "item": [
+    {
+      "name": "Criar Lembrete",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const responseJson = pm.response.json();",
+              "    if (responseJson.id) {",
+              "        pm.collectionVariables.set('reminderId', responseJson.id);",
+              "        console.log('Reminder ID salvo:', responseJson.id);",
+              "    }",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"medicineId\": \"{{medicineId}}\",\n  \"times\": [\"08:00\", \"16:00\", \"00:00\"],\n  \"daysOfWeek\": [\"MON\", \"TUE\", \"WED\", \"THU\", \"FRI\", \"SAT\", \"SUN\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders"]
+        },
+        "description": "Cria um novo lembrete para medicamento"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Lembretes",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders"]
+        },
+        "description": "Lista todos os lembretes do usuário"
+      },
+      "response": []
+    },
+    {
+      "name": "Listar Lembretes por Medicamento",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders/medicine/{{medicineId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders", "medicine", "{{medicineId}}"]
+        },
+        "description": "Lista lembretes de um medicamento específico"
+      },
+      "response": []
+    },
+    {
+      "name": "Editar Lembrete",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"medicineId\": \"{{medicineId}}\",\n  \"times\": [\"09:00\", \"18:00\"],\n  \"daysOfWeek\": [\"MON\", \"WED\", \"FRI\"]\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders/{{reminderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders", "{{reminderId}}"]
+        },
+        "description": "Edita um lembrete existente"
+      },
+      "response": []
+    },
+    {
+      "name": "Deletar Lembrete",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "x-access-token",
+            "value": "{{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/reminders/{{reminderId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "reminders", "{{reminderId}}"]
+        },
+        "description": "Remove um lembrete"
+      },
+      "response": []
+    }
+  ]
+}
