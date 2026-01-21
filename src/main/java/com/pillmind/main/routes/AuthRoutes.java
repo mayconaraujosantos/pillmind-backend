@@ -42,7 +42,7 @@ public class AuthRoutes implements Routes {
   @Override
   public void setup(Javalin app) throws Exception {
     try {
-      var signUpController = new SignUpController(addAccount, signUpValidation);
+      var signUpController = new SignUpController(addAccount, authentication, signUpValidation);
       var signInController = new SignInController(authentication, signInValidation);
 
       // Route: POST /api/signup

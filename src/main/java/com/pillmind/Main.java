@@ -56,7 +56,7 @@ public class Main {
 
       // Inicia servidor
       logger.info("Iniciando servidor na porta {}...", Env.PORT);
-      app.start(Env.PORT);
+      app.start("0.0.0.0", Env.PORT);
       logger.info("✓ Servidor iniciado com sucesso!");
       logger.info("Acesse: http://localhost:{}/swagger-ui", Env.PORT);
 
