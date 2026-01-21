@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS accounts (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255),
     google_account BOOLEAN NOT NULL DEFAULT FALSE,
+    google_id VARCHAR(255) UNIQUE,
+    picture_url TEXT,
+    last_login_at TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
