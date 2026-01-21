@@ -1,13 +1,20 @@
 package com.pillmind.presentation.controllers;
 
-import com.pillmind.domain.usecases.Authentication;
-import com.pillmind.presentation.validators.SignInValidation;
-import io.javalin.testtools.JavalinTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.presentation.validators.SignInValidation;
+
+import io.javalin.testtools.JavalinTest;
 
 /**
  * Testes para SignInController
@@ -43,17 +50,17 @@ public class SignInControllerTest {
     var validator = mock(SignInValidation.class);
 
     when(authentication.execute(any(Authentication.Params.class)))
-        .thenThrow(new RuntimeException("Invalid credentials"));
+        .thenThrow(new RuntimeException("Email ou senha inválidos"));
 
     JavalinTest.test((app, client) -> {
       app.post("/api/signin", new SignInController(authentication, validator)::handle);
 
       try (var response = client.post("/api/signin", """
-        {
-          "email": "invalid@example.com",
-          "password": "wrongPassword"
-        }
-        """)) {
+          {
+            "email": "invalid@example.com",
+            "password": "wrongPassword"
+          }
+          """)) {
 
         assertEquals(401, response.code());
       }
@@ -65,17 +72,18 @@ public class SignInControllerTest {
     var authentication = mock(Authentication.class);
     var validator = mock(SignInValidation.class);
 
-    // Quando a validação for chamada com qualquer request, lança exceção para simular payload inválido
+    // Quando a validação for chamada com qualquer request, lança exceção para
+    // simular payload inválido
     doThrow(new RuntimeException("Password is required")).when(validator).validate(any());
 
     JavalinTest.test((app, client) -> {
       app.post("/api/signin", new SignInController(authentication, validator)::handle);
       var payload = """
-        {
-          "email": "test@example.com",
-          "password": ""
-        }
-        """;
+          {
+            "email": "test@example.com",
+            "password": ""
+          }
+          """;
       try (var response = client.post("/api/signin", payload)) {
 
         assertEquals(400, response.code());

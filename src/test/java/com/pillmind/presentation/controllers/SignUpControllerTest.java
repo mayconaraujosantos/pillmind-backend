@@ -1,27 +1,45 @@
 package com.pillmind.presentation.controllers;
 
-import com.pillmind.domain.models.Account;
-import com.pillmind.domain.usecases.AddAccount;
-import com.pillmind.presentation.helpers.HttpHelper;
-import com.pillmind.presentation.protocols.Validation;
-import io.javalin.http.Context;
-import io.javalin.testtools.JavalinTest;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.LocalDateTime;
+
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.pillmind.domain.models.Account;
+import com.pillmind.domain.usecases.AddAccount;
+import com.pillmind.presentation.protocols.Validation;
 
-/**
- * Testes para SignUpController
- */
+import io.javalin.testtools.JavalinTest;
+
 class SignUpControllerTest {
+  public LocalDateTime createdAt() {
+    return LocalDateTime.of(2024, 1, 1, 12, 0);
+  }
+
+  public LocalDateTime updatedAt() {
+    return LocalDateTime.now();
+  }
+
+  private Account makedAccount(String id, String name, String email, boolean googleAccount) {
+    return new Account(id, name, email, null, googleAccount, null, null, null, createdAt(), updatedAt());
+  }
+
   @Test
-  void shouldReturn200WithAccountDataOnSuccess() {
+  @DisplayName("Should return 201 with account data on successful user creation")
+  void shouldReturn201WithAccountDataOnSuccess() {
     var addAccount = mock(AddAccount.class);
     var validation = mock(Validation.class);
 
-    var account = new Account("account-id", "John Doe", "john@example.com", "hashed", false);
+    var account = makedAccount("account-id", "John Doe", "john@example.com", false);
     when(addAccount.execute(any(AddAccount.Params.class))).thenReturn(account);
 
     JavalinTest.test((app, client) -> {
@@ -36,9 +54,9 @@ class SignUpControllerTest {
           }
           """);
 
-        assertEquals(201, response.code());
-         assertTrue(response.body().string().contains("account-id"));
-      verify(validation).validate(any());
+      assertEquals(201, response.code());
+      assertTrue(response.body().string().contains("account-id"));
+      verify(validation).validate(any(Object.class));
       verify(addAccount).execute(any(AddAccount.Params.class));
     });
   }
