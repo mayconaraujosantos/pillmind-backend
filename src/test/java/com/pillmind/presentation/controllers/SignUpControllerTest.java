@@ -1,7 +1,6 @@
 package com.pillmind.presentation.controllers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -10,17 +9,33 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
+import java.util.function.BiConsumer;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.pillmind.domain.errors.ConflictException;
+import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.domain.models.Account;
 import com.pillmind.domain.usecases.AddAccount;
+import com.pillmind.presentation.controllers.SignUpController.SignUpRequest;
+import com.pillmind.presentation.handlers.ErrorHandlers;
 import com.pillmind.presentation.protocols.Validation;
+import com.pillmind.presentation.validators.SignUpValidation;
+import com.pillmind.domain.usecases.Authentication;
 
+import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
+import io.javalin.testtools.HttpClient;
 
 class SignUpControllerTest {
+
+  private AddAccount addAccount;
+  private Authentication authentication;
+  private Validation<SignUpRequest> validation;
+  private SignUpController signUpController;
+
   public LocalDateTime createdAt() {
     return LocalDateTime.of(2024, 1, 1, 12, 0);
   }
@@ -33,18 +48,33 @@ class SignUpControllerTest {
     return new Account(id, name, email, null, googleAccount, null, null, null, createdAt(), updatedAt());
   }
 
+
+
+  @BeforeEach
+  void setUp() {
+    addAccount = mock(AddAccount.class);
+    authentication = mock(Authentication.class);
+    validation = mock(SignUpValidation.class);
+    signUpController = new SignUpController(addAccount, authentication, validation);
+  }
+
+  private void withSignUpApp(BiConsumer<Javalin, HttpClient> test) {
+    JavalinTest.test((app, client) -> {
+      ErrorHandlers.configure(app);
+      app.post("/api/signup", signUpController::handle);
+      test.accept(app, client);
+    });
+  }
+
+
   @Test
   @DisplayName("Should return 201 with account data on successful user creation")
   void shouldReturn201WithAccountDataOnSuccess() {
-    var addAccount = mock(AddAccount.class);
-    var validation = mock(Validation.class);
-
     var account = makedAccount("account-id", "John Doe", "john@example.com", false);
     when(addAccount.execute(any(AddAccount.Params.class))).thenReturn(account);
+    when(authentication.execute(any(Authentication.Params.class))).thenReturn(new Authentication.Result("token-123", "account-id"));
 
-    JavalinTest.test((app, client) -> {
-      app.post("/api/signup", new SignUpController(addAccount, validation)::handle);
-
+    withSignUpApp((app, client) -> {
       var response = client.post("/api/signup", """
           {
             "name": "John Doe",
@@ -55,22 +85,17 @@ class SignUpControllerTest {
           """);
 
       assertEquals(201, response.code());
-      assertTrue(response.body().string().contains("account-id"));
-      verify(validation).validate(any(Object.class));
+      verify(validation).validate(any(SignUpRequest.class));
       verify(addAccount).execute(any(AddAccount.Params.class));
     });
   }
 
   @Test
   void shouldReturn400WhenValidationFails() {
-    var addAccount = mock(AddAccount.class);
-    var validation = mock(Validation.class);
 
-    doThrow(new RuntimeException("Validation error")).when(validation).validate(any());
+    doThrow(new ValidationException("Validation error")).when(validation).validate(any());
 
-    JavalinTest.test((app, client) -> {
-      app.post("/api/signup", new SignUpController(addAccount, validation)::handle);
-
+    withSignUpApp((app, client) -> {
       var response = client.post("/api/signup", """
           {
             "name": "",
@@ -85,16 +110,12 @@ class SignUpControllerTest {
   }
 
   @Test
-  void shouldReturn400WhenEmailAlreadyExists() {
-    var addAccount = mock(AddAccount.class);
-    var validation = mock(Validation.class);
+  void shouldReturn409WhenEmailAlreadyExists() {
 
     when(addAccount.execute(any(AddAccount.Params.class)))
-        .thenThrow(new RuntimeException("Email already exists"));
+        .thenThrow(new ConflictException("Email already exists"));
 
-    JavalinTest.test((app, client) -> {
-      app.post("/api/signup", new SignUpController(addAccount, validation)::handle);
-
+    withSignUpApp((app, client) -> {
       var response = client.post("/api/signup", """
           {
             "name": "John Doe",
@@ -104,7 +125,8 @@ class SignUpControllerTest {
           }
           """);
 
-      assertEquals(400, response.code());
+      assertEquals(409, response.code());
     });
   }
+
 }

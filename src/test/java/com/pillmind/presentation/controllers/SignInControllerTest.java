@@ -11,7 +11,10 @@ import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 
+import com.pillmind.domain.errors.UnauthorizedException;
+import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.presentation.handlers.ErrorHandlers;
 import com.pillmind.presentation.validators.SignInValidation;
 
 import io.javalin.testtools.JavalinTest;
@@ -29,6 +32,7 @@ public class SignInControllerTest {
         .thenReturn(new Authentication.Result("access-token-123", "account-id"));
 
     JavalinTest.test((app, client) -> {
+      ErrorHandlers.configure(app);
       app.post("/api/signin", new SignInController(authentication, validator)::handle);
 
       var response = client.post("/api/signin", """
@@ -50,9 +54,10 @@ public class SignInControllerTest {
     var validator = mock(SignInValidation.class);
 
     when(authentication.execute(any(Authentication.Params.class)))
-        .thenThrow(new RuntimeException("Email ou senha inválidos"));
+        .thenThrow(new UnauthorizedException("Email ou senha inválidos"));
 
     JavalinTest.test((app, client) -> {
+      ErrorHandlers.configure(app);
       app.post("/api/signin", new SignInController(authentication, validator)::handle);
 
       try (var response = client.post("/api/signin", """
@@ -74,9 +79,10 @@ public class SignInControllerTest {
 
     // Quando a validação for chamada com qualquer request, lança exceção para
     // simular payload inválido
-    doThrow(new RuntimeException("Password is required")).when(validator).validate(any());
+    doThrow(new ValidationException("Password is required")).when(validator).validate(any());
 
     JavalinTest.test((app, client) -> {
+      ErrorHandlers.configure(app);
       app.post("/api/signin", new SignInController(authentication, validator)::handle);
       var payload = """
           {
