@@ -11,6 +11,7 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
+import com.pillmind.domain.errors.UnauthorizedException;
 
 /**
  * Validador de tokens do Google OAuth2
@@ -33,14 +34,14 @@ public class GoogleTokenValidator {
      * 
      * @param idTokenString Token JWT recebido do cliente
      * @return Informações validadas do usuário
-     * @throws RuntimeException se o token for inválido
+     * @throws UnauthorizedException se o token for inválido
      */
     public GoogleUserInfo validate(String idTokenString) {
         try {
             GoogleIdToken idToken = verifier.verify(idTokenString);
 
             if (idToken == null) {
-                throw new RuntimeException("Token do Google inválido ou expirado");
+                throw new UnauthorizedException("Token do Google inválido ou expirado");
             }
 
             GoogleIdToken.Payload payload = idToken.getPayload();
@@ -53,7 +54,7 @@ public class GoogleTokenValidator {
 
             if (!emailVerified) {
                 logger.warn("Tentativa de login com email não verificado: {}", email);
-                throw new RuntimeException("Email do Google não verificado");
+                throw new UnauthorizedException("Email do Google não verificado");
             }
 
             logger.info("Token Google validado com sucesso para: {}", email);
@@ -61,7 +62,7 @@ public class GoogleTokenValidator {
 
         } catch (GeneralSecurityException | IOException e) {
             logger.error("Erro ao validar token do Google: {}", e.getMessage(), e);
-            throw new RuntimeException("Erro ao validar token do Google: " + e.getMessage());
+            throw new UnauthorizedException("Erro ao validar token do Google: " + e.getMessage(), e);
         }
     }
 
