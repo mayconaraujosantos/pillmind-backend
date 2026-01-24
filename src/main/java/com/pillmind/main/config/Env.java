@@ -9,7 +9,7 @@ public class Env {
     }
 
     public static final int PORT = Integer.parseInt(
-            System.getenv().getOrDefault("PORT", "7000"));
+            System.getenv().getOrDefault("PORT", "8080"));
 
     public static final String DATABASE_URL = System.getenv().getOrDefault(
             "DATABASE_URL",

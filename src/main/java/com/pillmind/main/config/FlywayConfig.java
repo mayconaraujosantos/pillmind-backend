@@ -11,6 +11,7 @@ public class FlywayConfig {
                 Env.DATABASE_PASSWORD
             )
             .locations("classpath:db/migration")
+            .baselineOnMigrate(true)
             .load();
         
         flyway.migrate();
