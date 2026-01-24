@@ -3,11 +3,12 @@ package com.pillmind.presentation.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.domain.usecases.AddAccount;
 import com.pillmind.domain.usecases.Authentication;
 import com.pillmind.infra.oauth.GoogleTokenValidator;
-import com.pillmind.presentation.helpers.HttpHelper;
 import com.pillmind.presentation.protocols.Controller;
 
 import io.javalin.http.Context;
@@ -39,8 +40,7 @@ public class GoogleAuthController implements Controller {
             var request = objectMapper.readValue(ctx.body(), GoogleAuthRequest.class);
 
             if (request.idToken() == null || request.idToken().isBlank()) {
-                HttpHelper.badRequest(ctx, "O campo 'idToken' é obrigatório");
-                return;
+                throw new ValidationException("O campo 'idToken' é obrigatório");
             }
 
             // Valida token com Google e extrai dados do usuário
@@ -62,18 +62,13 @@ public class GoogleAuthController implements Controller {
                 var authResult = authentication.execute(
                     new Authentication.Params(account.email(), null));
 
-                HttpHelper.ok(ctx, new GoogleAuthResponse(
+                ctx.status(200).json(new GoogleAuthResponse(
                     authResult.accessToken(),
                     account.id(),
                     account.name(),
                     account.email()));
-
-        } catch (RuntimeException e) {
-            logger.warn("Erro no GoogleAuthController: {}", e.getMessage());
-            HttpHelper.badRequest(ctx, e.getMessage());
-        } catch (Exception e) {
-            logger.error("Erro inesperado no GoogleAuthController: {}", e.getMessage(), e);
-            HttpHelper.serverError(ctx, "Erro interno do servidor");
+        } catch (JsonProcessingException e) {
+            throw new ValidationException("Formato JSON inválido na requisição", e);
         }
     }
 

@@ -3,7 +3,9 @@ package com.pillmind.presentation.controllers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.domain.usecases.AddAccount;
 import com.pillmind.domain.usecases.Authentication;
 import com.pillmind.presentation.helpers.HttpHelper;
@@ -62,12 +64,8 @@ public class SignUpController implements Controller {
           account.email(), account.id(), authResult.accessToken() != null);
       
       HttpHelper.created(ctx, response);
-    } catch (RuntimeException e) {
-      logger.error("✗ RuntimeException in SignUp: {}", e.getMessage(), e);
-      HttpHelper.badRequest(ctx, e.getMessage());
-    } catch (Exception e) {
-      logger.error("✗ Unexpected exception in SignUp: {}", e.getMessage(), e);
-      HttpHelper.serverError(ctx, "Erro interno do servidor");
+    } catch (JsonProcessingException e) {
+      throw new ValidationException("Formato JSON inválido na requisição", e);
     }
   }
 
