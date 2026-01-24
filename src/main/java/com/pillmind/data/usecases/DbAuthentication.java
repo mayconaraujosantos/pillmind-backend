@@ -3,6 +3,7 @@ package com.pillmind.data.usecases;
 import com.pillmind.data.protocols.cryptography.Encrypter;
 import com.pillmind.data.protocols.cryptography.HashComparer;
 import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
+import com.pillmind.domain.errors.UnauthorizedException;
 import com.pillmind.domain.usecases.Authentication;
 
 /**
@@ -25,7 +26,7 @@ public class DbAuthentication extends DbUseCase implements Authentication {
   @Override
   public Result execute(Params params) {
     var account = loadAccountByEmailRepository.loadByEmail(params.email())
-        .orElseThrow(() -> new RuntimeException("Email ou senha inválidos"));
+        .orElseThrow(() -> new UnauthorizedException("Email ou senha inválidos"));
 
     // Se for conta Google, valida de forma diferente
     if (account.googleAccount()) {
@@ -35,14 +36,14 @@ public class DbAuthentication extends DbUseCase implements Authentication {
         return new Result(accessToken, account.id());
       }
       // Se enviou senha, mas é conta Google, rejeita
-      throw new RuntimeException("Esta conta usa login do Google. Use 'Entrar com Google'");
+      throw new UnauthorizedException("Esta conta usa login do Google. Use 'Entrar com Google'");
     }
 
     // Conta tradicional - valida senha
     if (params.password() == null ||
         account.password() == null ||
         !hashComparer.compare(params.password(), account.password())) {
-      throw new RuntimeException("Email ou senha inválidos");
+      throw new UnauthorizedException("Email ou senha inválidos");
     }
 
     var accessToken = encrypter.encrypt(account.id());
