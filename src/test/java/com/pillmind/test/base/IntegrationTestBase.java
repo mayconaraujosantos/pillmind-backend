@@ -56,8 +56,8 @@ public abstract class IntegrationTestBase {
     /**
      * Helper para contar registros
      */
-    protected int countRows(String tableName, String whereClause) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + tableName;
+    protected int countRows(String whereClause) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM " + "accounts";
         if (whereClause != null && !whereClause.isEmpty()) {
             sql += " WHERE " + whereClause;
         }

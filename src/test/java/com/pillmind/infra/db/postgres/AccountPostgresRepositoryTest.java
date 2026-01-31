@@ -1,16 +1,15 @@
 package com.pillmind.infra.db.postgres;
 
-import com.pillmind.data.protocols.db.AddAccountRepository;
-import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
-import com.pillmind.domain.models.Account;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.pillmind.data.protocols.db.AddAccountRepository;
+import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
 
 /**
  * Testes para AccountPostgresRepository

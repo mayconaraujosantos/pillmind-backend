@@ -42,7 +42,7 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
             assertTrue(responseBody.contains("John Doe"));
 
             // Verifica se foi criado no banco de dados
-            int count = countRows("accounts", "email = 'john@example.com'");
+            int count = countRows("email = 'john@example.com'");
             assertEquals(1, count, "Conta deveria ter sido criada no banco de dados");
         });
     }
@@ -76,7 +76,7 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
             assertEquals(400, response2.code());
 
             // Verifica que apenas um usuário existe no banco
-            int count = countRows("accounts", "email = 'john@example.com'");
+            int count = countRows("email = 'john@example.com'");
             assertEquals(1, count, "Apenas um usuário com este email deveria existir");
         });
     }
@@ -98,7 +98,7 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
             assertEquals(400, response.code());
 
             // Verifica que nada foi criado no banco
-            int count = countRows("accounts", null);
+            int count = countRows(null);
             assertEquals(0, count, "Nenhum usuário deveria ter sido criado");
         });
     }
