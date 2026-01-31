@@ -3,14 +3,14 @@ package com.pillmind.main.routes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pillmind.data.protocols.cryptography.Decrypter;
 import com.pillmind.domain.usecases.AddAccount;
 import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.domain.usecases.LoadAccountById;
 import com.pillmind.presentation.controllers.GoogleAuthController;
 import com.pillmind.presentation.controllers.ProfileController;
 import com.pillmind.presentation.controllers.SignInController;
 import com.pillmind.presentation.controllers.SignUpController;
-import com.pillmind.data.protocols.cryptography.Decrypter;
-import com.pillmind.domain.usecases.LoadAccountById;
 import com.pillmind.presentation.helpers.LogSanitizer;
 import com.pillmind.presentation.protocols.Validation;
 
@@ -49,7 +49,7 @@ public class AuthRoutes implements Routes {
   }
 
   @Override
-  public void setup(Javalin app) throws Exception {
+  public void setup(Javalin app) {
     var signUpController = new SignUpController(addAccount, authentication, signUpValidation);
     var signInController = new SignInController(authentication, signInValidation);
     var profileController = new ProfileController(loadAccountById, decrypter);
