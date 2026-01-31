@@ -149,8 +149,8 @@ public class ApplicationBootstrap {
     private void registerRoutes() {
         logger.debug("Registrando rotas...");
 
-        container.registerSingleton("route.swagger", new SwaggerRoutes());
         container.registerSingleton("route.health", new HealthRoutes());
+        container.registerSingleton("route.swagger", new SwaggerRoutes());
 
         // AuthRoutes precisa de dependências, então usa factory
         container.registerFactory("route.auth", () -> {
@@ -164,13 +164,13 @@ public class ApplicationBootstrap {
             var googleAuthController = new GoogleAuthController(addAccount, authentication, googleTokenValidator);
 
             return new AuthRoutes(
-                addAccount,
-                authentication,
-                signUpValidation,
-                signInValidation,
-                googleAuthController,
-                loadAccountById,
-                decrypter);
+                    addAccount,
+                    authentication,
+                    signUpValidation,
+                    signInValidation,
+                    googleAuthController,
+                    loadAccountById,
+                    decrypter);
         });
     }
 
