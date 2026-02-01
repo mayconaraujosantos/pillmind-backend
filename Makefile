@@ -19,8 +19,15 @@ help:
 	@echo "-------------------------------------"
 	@echo "make build             - Gradle build"
 	@echo "make test              - Run tests"
+	@echo "make test-one TEST=... - Run a specific test class or method (supports short name)"
 	@echo "make run               - Run app (local)"
+	@echo "make start             - Run app (alias for run)"
 	@echo "make clean             - Clean build"
+	@echo "make flyway-migrate    - Run Flyway migrations"
+	@echo "make flyway-clean      - Clean Flyway schema (DANGEROUS)"
+	@echo "make flyway-info       - Show Flyway status"
+	@echo "make flyway-validate   - Validate Flyway migrations"
+	@echo "make flyway-repair     - Repair Flyway metadata"
 	@echo "make docker-build      - Build Docker image"
 	@echo "make kind-load         - Load image into kind cluster"
 	@echo "make k8s-restart       - Restart deployment in cluster"
@@ -42,13 +49,41 @@ build:
 test:
 	./gradlew test
 
+.PHONY: test-one
+test-one:
+	@if [ -z "$(TEST)" ]; then echo "Usage: make test-one TEST=SignUpControllerIntegrationTest.shouldCreateUserAndPersistToDatabase"; exit 1; fi
+	./gradlew test --tests "*$(TEST)"
+
 .PHONY: run
 run:
 	./gradlew run
 
+.PHONY: start
+start: run
+
 .PHONY: clean
 clean:
 	./gradlew clean
+
+.PHONY: flyway-migrate
+flyway-migrate:
+	./gradlew flywayMigrate
+
+.PHONY: flyway-clean
+flyway-clean:
+	./gradlew flywayClean
+
+.PHONY: flyway-info
+flyway-info:
+	./gradlew flywayInfo
+
+.PHONY: flyway-validate
+flyway-validate:
+	./gradlew flywayValidate
+
+.PHONY: flyway-repair
+flyway-repair:
+	./gradlew flywayRepair
 
 .PHONY: docker-build
 docker-build:

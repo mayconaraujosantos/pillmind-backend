@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.pillmind.data.protocols.cryptography.Hasher;
 import com.pillmind.data.protocols.db.AddAccountRepository;
 import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
+import com.pillmind.domain.errors.ConflictException;
 import com.pillmind.domain.models.Account;
 import com.pillmind.domain.usecases.AddAccount;
 
@@ -44,7 +45,7 @@ public class DbAddAccount extends DbUseCase implements AddAccount {
       }
 
       // Conta tradicional existente: mantém comportamento atual (erro)
-      throw new RuntimeException("Este email já está cadastrado. Use outro email ou faça login.");
+      throw new ConflictException("Este email já está cadastrado. Use outro email ou faça login.");
     }
 
     var hashedPassword = params.googleAccount()

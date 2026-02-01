@@ -1,0 +1,58 @@
+
+
+# 💡 Template para Conventional Commits
+#
+# Formato: <tipo>(<escopo>): <descrição>
+#
+# Tipos disponíveis:
+# - feat:     Nova funcionalidade
+# - fix:      Correção de bug
+# - docs:     Apenas documentação
+# - style:    Formatação (não afeta o código)
+# - refactor: Refatoração sem mudar funcionalidade
+# - perf:     Melhoria de performance
+# - test:     Adicionar ou corrigir testes
+# - build:    Mudanças no build ou dependências
+# - ci:       Mudanças em CI/CD
+# - chore:    Tarefas de manutenção
+# - revert:   Reverter commit anterior
+#
+# Escopos comuns no PillMind:
+# - auth:       Autenticação e autorização
+# - api:        Endpoints REST
+# - domain:     Lógica de domínio
+# - data:       Camada de dados/repositórios
+# - config:     Configurações
+# - security:   Segurança
+# - migration:  Migrações de banco de dados
+# - dto:        Data Transfer Objects
+# - validation: Validações
+# - exception:  Tratamento de exceções
+# - docs:       Documentação (Swagger/OpenAPI)
+#
+# Regras:
+# 1. Use o modo imperativo: "add" não "added" ou "adds"
+# 2. Não capitalize a primeira letra
+# 3. Sem ponto final no título
+# 4. Máximo de 50 caracteres no título
+# 5. Corpo da mensagem (opcional) com máximo 72 caracteres por linha
+# 6. Separe título do corpo com uma linha em branco
+# 7. Use o corpo para explicar "o quê" e "por quê", não "como"
+#
+# Exemplos:
+# feat(auth): add JWT token refresh mechanism
+# fix(api): resolve null pointer in medicine search
+# docs(readme): update setup instructions
+# refactor(service): extract user validation logic
+# test(domain): add unit tests for Medicine entity
+# build(deps): upgrade Spring Boot to 3.2.0
+#
+# Breaking Changes (use ! ou BREAKING CHANGE no rodapé):
+# feat(api)!: change authentication response structure
+#
+# BREAKING CHANGE: auth endpoint now returns nested user object
+#
+# Referências de issues:
+# Refs: #123
+# Closes: #456
+# Fixes: #789

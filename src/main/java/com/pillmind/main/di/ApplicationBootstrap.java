@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 
 import com.pillmind.data.usecases.DbAddAccount;
 import com.pillmind.data.usecases.DbAuthentication;
+import com.pillmind.data.usecases.DbLoadAccountById;
 import com.pillmind.domain.usecases.AddAccount;
 import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.domain.usecases.LoadAccountById;
 import com.pillmind.infra.cryptography.BcryptAdapter;
 import com.pillmind.infra.cryptography.JwtAdapter;
 import com.pillmind.infra.db.postgres.AccountPostgresRepository;
@@ -123,6 +125,12 @@ public class ApplicationBootstrap {
             var encrypter = container.resolve("crypto.jwt", JwtAdapter.class);
             return new DbAuthentication(accountRepository, hashComparer, encrypter);
         });
+
+        // LoadAccountById use case
+        container.registerFactory("usecase.load-account-by-id", () -> {
+            var accountRepository = container.resolve("repository.account", AccountPostgresRepository.class);
+            return new DbLoadAccountById(accountRepository);
+        });
     }
 
     /**
@@ -141,19 +149,28 @@ public class ApplicationBootstrap {
     private void registerRoutes() {
         logger.debug("Registrando rotas...");
 
-        container.registerSingleton("route.swagger", new SwaggerRoutes());
         container.registerSingleton("route.health", new HealthRoutes());
+        container.registerSingleton("route.swagger", new SwaggerRoutes());
 
         // AuthRoutes precisa de dependências, então usa factory
         container.registerFactory("route.auth", () -> {
             var addAccount = container.resolve("usecase.add-account", AddAccount.class);
             var authentication = container.resolve("usecase.authentication", Authentication.class);
+            var loadAccountById = container.resolve("usecase.load-account-by-id", LoadAccountById.class);
             var signUpValidation = container.resolve("validator.signup", SignUpValidation.class);
             var signInValidation = container.resolve("validator.signin", SignInValidation.class);
             var googleTokenValidator = container.resolve("oauth.google-validator", GoogleTokenValidator.class);
+            var decrypter = container.resolve("crypto.jwt", JwtAdapter.class);
             var googleAuthController = new GoogleAuthController(addAccount, authentication, googleTokenValidator);
 
-            return new AuthRoutes(addAccount, authentication, signUpValidation, signInValidation, googleAuthController);
+            return new AuthRoutes(
+                    addAccount,
+                    authentication,
+                    signUpValidation,
+                    signInValidation,
+                    googleAuthController,
+                    loadAccountById,
+                    decrypter);
         });
     }
 
