@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.pillmind.main.config.Env;
 import com.pillmind.main.config.FlywayConfig;
+import com.pillmind.main.config.SwaggerConfig;
 import com.pillmind.main.di.ApplicationBootstrap;
 import com.pillmind.main.di.Container;
 import com.pillmind.main.routes.AuthRoutes;
@@ -41,16 +42,21 @@ public class Main {
       logger.info("Bootstrap concluído!");
 
       var app = Javalin
-          .create(config -> config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost)));
+          .create(config -> {
+            config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+            // Registra plugins do Swagger/OpenAPI
+            config.registerPlugin(SwaggerConfig.createOpenApiPlugin());
+            config.registerPlugin(SwaggerConfig.createSwaggerPlugin());
+          });
 
       // Configurar handlers de erro globais
       ErrorHandlers.configure(app);
 
       // Configura rotas
       logger.info("Configurando rotas...");
-      container.resolve("route.swagger", SwaggerRoutes.class).setup(app);
       container.resolve("route.health", HealthRoutes.class).setup(app);
       container.resolve("route.auth", AuthRoutes.class).setup(app);
+      container.resolve("route.swagger", SwaggerRoutes.class).setup(app);
       logger.info("Rotas configuradas!");
 
       // Inicia servidor
