@@ -7,6 +7,9 @@ group = 'com.pillmind'
 version = '1.0-SNAPSHOT'
 
 java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
 }
@@ -30,6 +33,9 @@ dependencies {
     
     // OpenAPI/Swagger
     implementation("io.javalin:javalin-bundle:6.0.0")
+    implementation("io.javalin.community.openapi:javalin-openapi-plugin:6.0.0")
+    implementation("io.javalin.community.openapi:javalin-swagger-plugin:6.0.0")
+    annotationProcessor("io.javalin.community.openapi:openapi-annotation-processor:6.0.0")
 
     // Database
     implementation("org.postgresql:postgresql:42.6.0")
@@ -54,6 +60,11 @@ dependencies {
     // Google OAuth2
     implementation("com.google.api-client:google-api-client:2.2.0")
     implementation("com.google.http-client:google-http-client-jackson2:1.43.3")
+    // Add the appropriate Google API library
+    implementation 'com.google.api-client:google-api-client:2.0.0'
+    // Or if you need a specific service (e.g., Google Auth):
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.11.0'
+
 
     // Caching (opcional)
     implementation("redis.clients:jedis:4.4.3")
@@ -96,6 +107,22 @@ tasks.register('generateHash', JavaExec) {
     args = ['password123']
   }
 }
+
+def registerFlywayTask = { String taskName, String command ->
+        tasks.register(taskName, JavaExec) {
+                group = 'Flyway'
+                description = "Run Flyway ${command}"
+                mainClass = 'com.pillmind.tools.FlywayTool'
+                classpath = sourceSets.main.runtimeClasspath
+                args command
+        }
+}
+
+registerFlywayTask('flywayMigrate', 'migrate')
+registerFlywayTask('flywayClean', 'clean')
+registerFlywayTask('flywayInfo', 'info')
+registerFlywayTask('flywayValidate', 'validate')
+registerFlywayTask('flywayRepair', 'repair')
 
 // Create fat JAR
 jar {

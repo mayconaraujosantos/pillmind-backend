@@ -18,6 +18,17 @@ public class SwaggerRoutes {
             }
         });
 
+        // Serve OpenAPI YAML
+        app.get("/api/openapi.yaml", ctx -> {
+            InputStream is = getClass().getClassLoader().getResourceAsStream("openapi.yaml");
+            if (is != null) {
+                String content = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+                ctx.contentType("application/yaml").result(content);
+            } else {
+                ctx.status(404).result("OpenAPI YAML spec not found");
+            }
+        });
+
         // Serve Swagger UI HTML
         app.get("/swagger-ui", ctx -> {
             InputStream is = getClass().getClassLoader().getResourceAsStream("swagger-ui.html");
