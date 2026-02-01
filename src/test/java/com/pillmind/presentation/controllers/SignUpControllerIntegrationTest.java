@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import com.pillmind.main.routes.AuthRoutes;
+import com.pillmind.presentation.handlers.ErrorHandlers;
 import com.pillmind.test.base.IntegrationTestBase;
 
 import io.javalin.Javalin;
@@ -73,7 +74,7 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "googleAccount": false
                     }
                     """);
-            assertEquals(400, response2.code());
+            assertEquals(409, response2.code());
 
             // Verifica que apenas um usuário existe no banco
             int count = countRows("email = 'john@example.com'");
@@ -173,6 +174,7 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
      * Helper para setup das rotas
      */
     private void setupRoutes(Javalin app) {
+        ErrorHandlers.configure(app);
         var authRoutes = container.resolve("route.auth", AuthRoutes.class);
         try {
             authRoutes.setup(app);
