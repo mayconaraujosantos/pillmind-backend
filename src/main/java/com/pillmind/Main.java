@@ -3,6 +3,7 @@ package com.pillmind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pillmind.main.config.DotenvLoader;
 import com.pillmind.main.config.Env;
 import com.pillmind.main.config.FlywayConfig;
 import com.pillmind.main.config.SwaggerConfig;
@@ -26,8 +27,9 @@ public class Main {
   public static void main(String[] args) {
     try {
       logger.info("=== Iniciando PillMind Backend ===");
-      logger.info("Porta: {}", Env.PORT);
-      logger.info("Database: {}", Env.DATABASE_URL);
+      DotenvLoader.load(".env", logger);
+      Env.validate();
+      Env.logSummary(logger);
 
       // Executa migrations do banco de dados
       logger.info("Executando migrations do Flyway...");

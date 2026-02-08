@@ -1,0 +1,28 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "name": "Debug PillMind",
+      "request": "launch",
+      "mainClass": "com.pillmind.Main",
+      "projectName": "pillmind-backend",
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8"
+    },
+    {
+      "type": "java",
+      "name": "Run PillMind",
+      "request": "launch",
+      "mainClass": "com.pillmind.Main",
+      "projectName": "pillmind-backend",
+      "envFile": "${workspaceFolder}/.env",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "vmArgs": "-Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8",
+      "noDebug": true
+    }
+  ]
+}

@@ -53,6 +53,39 @@ Managed via ConfigMap and Secret. Update values in:
 - `k8s/base/configmap.yaml` (non-sensitive)
 - `k8s/base/secret.yaml` (sensitive - use sealed-secrets or external secrets in production)
 
+## Application Environment Variables
+
+Local and CI/CD execution uses environment variables (or Java system properties with `-D`).
+
+Required in production (`APP_ENV=prod` or `production`):
+
+- `DATABASE_URL`
+- `DATABASE_USER`
+- `DATABASE_PASSWORD`
+- `JWT_SECRET`
+
+Optional (with defaults for dev):
+
+- `APP_ENV` (default: `dev`)
+- `PORT` (default: `7000`)
+- `JWT_EXPIRATION_IN_MS` (default: `86400000`)
+- `BCRYPT_SALT_ROUNDS` (default: `12`)
+- `APP_URL` (default: `http://localhost:7000`)
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+
+To use a staging/HML database (Railway), set the Railway connection values before running.
+Example (bash):
+
+```bash
+export APP_ENV=staging
+export DATABASE_URL="jdbc:postgresql://HOST:PORT/DB"
+export DATABASE_USER="USER"
+export DATABASE_PASSWORD="PASS"
+export JWT_SECRET="your-secret"
+./gradlew run
+```
+
 
 sudo cp demo-tls.crt /etc/ca-certificates/trust-source/anchors/
 sudo trust extract-compat
