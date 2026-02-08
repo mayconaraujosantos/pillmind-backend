@@ -4,9 +4,9 @@ info:
   version: 1.0.0
   description: API for PillMind - Medication Management System
 servers:
-  - url: https://YOUR-RAILWAY-DOMAIN.railway.app
+  - url: https://pillmind-backend-staging.up.railway.app
     description: Production (Railway)
-  - url: http://localhost:7000
+  - url: http://localhost:8080
     description: Local Development
 paths:
   /api/health:
