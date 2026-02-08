@@ -30,6 +30,12 @@ Thumbs.db
 # Docker
 docker/.env
 
+# Local env files
+.env
+
+# Trunk tooling
+.trunk/
+
 # Logs
 *.log
 
