@@ -16,9 +16,9 @@ public final class Env {
 
         public static final int PORT = getInt("PORT", 7000, 1, 65535);
 
-        public static final String DATABASE_URL = getRequired("DATABASE_URL", "jdbc:postgresql://localhost:5432/pillmind");
-        public static final String DATABASE_USER = getRequired("DATABASE_USER", "postgres");
-        public static final String DATABASE_PASSWORD = getRequired("DATABASE_PASSWORD", "postgres");
+        public static final String DATABASE_URL = resolveDatabaseUrl();
+        public static final String DATABASE_USER = resolveDatabaseUser();
+        public static final String DATABASE_PASSWORD = resolveDatabasePassword();
 
         private static final String DEV_JWT_SECRET = "dev-only-secret-change";
         public static final String JWT_SECRET = getRequired("JWT_SECRET", DEV_JWT_SECRET);
@@ -54,11 +54,79 @@ public final class Env {
                 logger.info("Env: {}", APP_ENV);
                 logger.info("Port: {}", PORT);
                 logger.info("Database: {}", DATABASE_URL);
+                logger.info("Database url set: {}", !isBlank(getRaw("DATABASE_URL")));
+                logger.info("Db host set: {}", !isBlank(getRaw("DB_HOST")));
+                logger.info("Db user set: {}", !isBlank(getRaw("DATABASE_USER")) || !isBlank(getRaw("DB_USER")));
+                logger.info("Db password set: {}", !isBlank(getRaw("DATABASE_PASSWORD")) || !isBlank(getRaw("DB_PASSWORD")));
                 logger.info("Jwt expiration ms: {}", JWT_EXPIRATION_IN_MS);
                 logger.info("Bcrypt rounds: {}", BCRYPT_SALT_ROUNDS);
                 logger.info("Google client id set: {}", !isBlank(GOOGLE_CLIENT_ID));
                 logger.info("Google client secret set: {}", !isBlank(GOOGLE_CLIENT_SECRET));
                 logger.info("App url: {}", APP_URL);
+        }
+
+        private static String resolveDatabaseUrl() {
+                String rawUrl = getRaw("DATABASE_URL");
+                if (!isBlank(rawUrl)) {
+                        return normalizeJdbcUrl(rawUrl);
+                }
+
+                String host = getRaw("DB_HOST");
+                String port = getRaw("DB_PORT");
+                String dbName = firstNonBlank(
+                                getRaw("DB_NAME"),
+                                getRaw("DB_DATABASE"),
+                                getRaw("PGDATABASE"),
+                                "railway");
+
+                if (!isBlank(host)) {
+                        String resolvedPort = isBlank(port) ? "5432" : port.trim();
+                        return "jdbc:postgresql://" + host.trim() + ":" + resolvedPort + "/" + dbName.trim();
+                }
+
+                return IS_PROD ? "" : "jdbc:postgresql://localhost:5432/pillmind";
+        }
+
+        private static String resolveDatabaseUser() {
+                String user = firstNonBlank(
+                                getRaw("DATABASE_USER"),
+                                getRaw("DB_USER"),
+                                getRaw("PGUSER"));
+                if (!isBlank(user)) {
+                        return user;
+                }
+                return IS_PROD ? "" : "postgres";
+        }
+
+        private static String resolveDatabasePassword() {
+                String password = firstNonBlank(
+                                getRaw("DATABASE_PASSWORD"),
+                                getRaw("DB_PASSWORD"),
+                                getRaw("PGPASSWORD"));
+                if (!isBlank(password)) {
+                        return password;
+                }
+                return IS_PROD ? "" : "postgres";
+        }
+
+        private static String normalizeJdbcUrl(String url) {
+                String trimmed = url.trim();
+                if (trimmed.startsWith("jdbc:")) {
+                        return trimmed;
+                }
+                if (trimmed.startsWith("postgresql://")) {
+                        return "jdbc:" + trimmed;
+                }
+                return trimmed;
+        }
+
+        private static String firstNonBlank(String... values) {
+                for (String value : values) {
+                        if (!isBlank(value)) {
+                                return value.trim();
+                        }
+                }
+                return null;
         }
 
         private static String getRequired(String key, String devDefault) {
