@@ -3,7 +3,6 @@ package com.pillmind;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.pillmind.main.config.DotenvLoader;
 import com.pillmind.main.config.Env;
 import com.pillmind.main.config.FlywayConfig;
 import com.pillmind.main.config.SwaggerConfig;
@@ -27,9 +26,9 @@ public class Main {
   public static void main(String[] args) {
     try {
       logger.info("=== Iniciando PillMind Backend ===");
-      DotenvLoader.load(".env", logger);
-      Env.validate();
-      Env.logSummary(logger);
+      logger.info("Ambiente: {}", Env.APP_ENV);
+      logger.info("Porta: {}", Env.PORT);
+      logger.info("Database: {}", Env.DATABASE_URL);
 
       // Executa migrations do banco de dados
       logger.info("Executando migrations do Flyway...");
@@ -44,12 +43,12 @@ public class Main {
       logger.info("Bootstrap concluído!");
 
       var app = Javalin
-          .create(config -> {
-            config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
-            // Registra plugins do Swagger/OpenAPI
-            config.registerPlugin(SwaggerConfig.createOpenApiPlugin());
-            config.registerPlugin(SwaggerConfig.createSwaggerPlugin());
-          });
+        .create(config -> {
+          config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+          // Registra plugins do Swagger/OpenAPI
+          config.registerPlugin(SwaggerConfig.createOpenApiPlugin());
+          config.registerPlugin(SwaggerConfig.createSwaggerPlugin());
+        });
 
       // Configurar handlers de erro globais
       ErrorHandlers.configure(app);

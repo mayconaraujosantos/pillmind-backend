@@ -6,7 +6,7 @@ import com.pillmind.presentation.controllers.SignUpController;
 import com.pillmind.presentation.protocols.Validation;
 
 /**
- * Validador para requisições de Sign Up
+ * Validador para requisições de Sign Up - Nova estrutura (apenas contas locais)
  */
 public class SignUpValidation implements Validation<SignUpController.SignUpRequest> {
   @Override
@@ -23,13 +23,12 @@ public class SignUpValidation implements Validation<SignUpController.SignUpReque
       throw new ValidationException("Formato de email inválido");
     }
 
-    // Se não for conta Google, senha é obrigatória
-    if ((input.googleAccount() == null || !input.googleAccount()) &&
-        (input.password() == null || input.password().isBlank())) {
+    // Senha é obrigatória para contas locais
+    if (input.password() == null || input.password().isBlank()) {
       throw new ValidationException("O campo 'password' é obrigatório");
     }
 
-    if (input.password() != null && input.password().length() < 6) {
+    if (input.password().length() < 6) {
       throw new ValidationException("A senha deve ter no mínimo 6 caracteres");
     }
   }
