@@ -54,10 +54,28 @@ public abstract class IntegrationTestBase {
     }
 
     /**
-     * Helper para contar registros
+     * Helper para contar registros na tabela users
      */
     protected int countRows(String whereClause) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + "accounts";
+        String sql = "SELECT COUNT(*) FROM users";
+        if (whereClause != null && !whereClause.isEmpty()) {
+            sql += " WHERE " + whereClause;
+        }
+
+        try (Statement stmt = connection.createStatement();
+                ResultSet rs = stmt.executeQuery(sql)) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Helper para contar registros na tabela local_accounts
+     */
+    protected int countLocalAccounts(String whereClause) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM local_accounts";
         if (whereClause != null && !whereClause.isEmpty()) {
             sql += " WHERE " + whereClause;
         }

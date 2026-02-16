@@ -32,7 +32,8 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "name": "John Doe",
                       "email": "john@example.com",
                       "password": "SecurePass123",
-                      "googleAccount": false
+                      "dateOfBirth": "1990-05-15",
+                      "gender": "MALE"
                     }
                     """);
 
@@ -42,9 +43,13 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
             assertTrue(responseBody.contains("john@example.com"));
             assertTrue(responseBody.contains("John Doe"));
 
-            // Verifica se foi criado no banco de dados
-            int count = countRows("email = 'john@example.com'");
-            assertEquals(1, count, "Conta deveria ter sido criada no banco de dados");
+            // Verifica se foi criado no banco de dados (tabela users)
+            int userCount = countRows("email = 'john@example.com'");
+            assertEquals(1, userCount, "Usuário deveria ter sido criado no banco de dados");
+
+            // Verifica se conta local foi criada
+            int localAccountCount = countLocalAccounts("email = 'john@example.com'");
+            assertEquals(1, localAccountCount, "Conta local deveria ter sido criada no banco de dados");
         });
     }
 
@@ -60,7 +65,8 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "name": "John Doe",
                       "email": "john@example.com",
                       "password": "SecurePass123",
-                      "googleAccount": false
+                      "dateOfBirth": "1990-05-15",
+                      "gender": "MALE"
                     }
                     """);
             assertEquals(201, response1.code());
@@ -71,14 +77,15 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "name": "Jane Doe",
                       "email": "john@example.com",
                       "password": "SecurePass456",
-                      "googleAccount": false
+                      "dateOfBirth": "1995-12-25",
+                      "gender": "FEMALE"
                     }
                     """);
             assertEquals(409, response2.code());
 
             // Verifica que apenas um usuário existe no banco
-            int count = countRows("email = 'john@example.com'");
-            assertEquals(1, count, "Apenas um usuário com este email deveria existir");
+            int userCount = countRows("email = 'john@example.com'");
+            assertEquals(1, userCount, "Apenas um usuário com este email deveria existir");
         });
     }
 
@@ -115,15 +122,16 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "name": "John Doe",
                       "email": "john@example.com",
                       "password": "SecurePass123",
-                      "googleAccount": false
+                      "dateOfBirth": "1990-05-15",
+                      "gender": "MALE"
                     }
                     """);
 
             assertEquals(201, response.code());
 
-            // Verifica que a senha foi hasheada (não é igual ao plaintext)
+            // Verifica que a senha foi hasheada (não é igual ao plaintext) na tabela local_accounts
             String hashedPassword = queryOne(
-                    "SELECT password FROM accounts WHERE email = 'john@example.com'",
+                    "SELECT password_hash FROM local_accounts WHERE email = 'john@example.com'",
                     String.class);
 
             assertTrue(!hashedPassword.equals("SecurePass123"),
@@ -144,29 +152,26 @@ class SignUpControllerIntegrationTest extends IntegrationTestBase {
                       "name": "John Doe",
                       "email": "john@example.com",
                       "password": "SecurePass123",
-                      "googleAccount": false
+                      "dateOfBirth": "1990-05-15",
+                      "gender": "MALE"
                     }
                     """);
 
             assertEquals(201, response.code());
 
-            // Verifica que timestamps foram definidos
-            var result = queryOne(
-                    "SELECT created_at, updated_at FROM accounts WHERE email = 'john@example.com'",
+            // Verifica que timestamps foram definidos na tabela users
+            var userResult = queryOne(
+                    "SELECT created_at FROM users WHERE email = 'john@example.com'",
                     java.sql.Timestamp.class);
 
-            assertTrue(result != null, "Timestamps deveriam estar definidos");
+            assertTrue(userResult != null, "Timestamps do usuário deveriam estar definidos");
 
-            // Verifica que created_at e updated_at são iguais na criação
-            var createdAt = queryOne(
-                    "SELECT created_at FROM accounts WHERE email = 'john@example.com'",
-                    java.sql.Timestamp.class);
-            var updatedAt = queryOne(
-                    "SELECT updated_at FROM accounts WHERE email = 'john@example.com'",
+            // Verifica que timestamps foram definidos na tabela local_accounts
+            var accountResult = queryOne(
+                    "SELECT created_at FROM local_accounts WHERE email = 'john@example.com'",
                     java.sql.Timestamp.class);
 
-            assertEquals(createdAt.getTime(), updatedAt.getTime(),
-                    "created_at e updated_at deveriam ser iguais na criação");
+            assertTrue(accountResult != null, "Timestamps da conta local deveriam estar definidos");
         });
     }
 
