@@ -1,0 +1,24 @@
+-- Migration: Limpeza pós-migração - Remove tabelas antigas após reestruturação
+-- IMPORTANTE: Execute apenas após verificar que a migração V5 foi bem-sucedida
+-- e que todos os dados foram migrados corretamente
+
+-- 1. Remover tabela social_accounts (não mais necessária)
+DROP TABLE IF EXISTS social_accounts;
+
+-- 2. Fazer backup da tabela accounts antes de remover (opcional)
+-- CREATE TABLE accounts_backup AS SELECT * FROM accounts;
+
+-- 3. Remover tabela accounts original (descomentar apenas após validação completa)
+-- DROP TABLE IF EXISTS accounts;
+
+-- Comentários sobre a limpeza:
+-- 1. A tabela 'accounts' foi substituída por 'users', 'local_accounts' e 'oauth_accounts'
+-- 2. A tabela 'social_accounts' da V4 não é mais necessária  
+-- 3. Mantenha as tabelas antigas por um período de segurança antes da exclusão definitiva
+-- 4. Recomenda-se criar backups antes da exclusão definitiva
+
+-- Para executar a limpeza completa (execute apenas em produção após validação):
+-- 1. Validar se todos os dados foram migrados corretamente
+-- 2. Testar todas as funcionalidades com a nova estrutura
+-- 3. Fazer backup completo do banco
+-- 4. Descomentar e executar as linhas de DROP acima

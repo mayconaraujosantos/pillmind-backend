@@ -1,0 +1,42 @@
+-- Migration: Create social accounts table and enhance auth provider support
+-- This migration modernizes the OAuth2 integration with a dedicated social_accounts table
+-- and improves the existing accounts table with auth provider tracking
+
+-- Adicionar colunas auth_provider e email_verified na tabela accounts (versão H2 compatível)
+ALTER TABLE accounts ADD COLUMN auth_provider VARCHAR(20) DEFAULT 'LOCAL';
+ALTER TABLE accounts ADD COLUMN email_verified BOOLEAN DEFAULT false;
+
+-- Tabela para contas sociais (versão simplificada para compatibilidade H2/PostgreSQL)
+CREATE TABLE social_accounts (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    provider VARCHAR(20) NOT NULL,
+    provider_user_id VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    name VARCHAR(255),
+    profile_image_url TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expiry TIMESTAMP,
+    linked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_primary BOOLEAN DEFAULT false,
+    FOREIGN KEY (user_id) REFERENCES accounts(id) ON DELETE CASCADE
+);
+
+-- Atualizar auth_provider para contas Google existentes (se houver)
+UPDATE accounts 
+SET auth_provider = 'GOOGLE',
+    email_verified = true  
+WHERE google_account = true;
+
+-- Atualizar auth_provider para contas locais (email/password)
+UPDATE accounts 
+SET auth_provider = 'LOCAL'
+WHERE google_account = false OR google_account IS NULL;
+
+-- Comentários sobre a migração:
+-- 1. Mantemos compatibilidade com a estrutura atual da tabela 'accounts'
+-- 2. A nova tabela 'social_accounts' permite múltiplos provedores por usuário
+-- 3. O campo 'is_primary' indica qual conta social é a principal
+-- 4. O campo 'auth_provider' facilita queries e relatórios
+-- 5. Dados existentes são migrados automaticamente

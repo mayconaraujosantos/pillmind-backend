@@ -1,0 +1,106 @@
+-- Migration: Reestruturação completa - Separar perfil de usuário e autenticação
+-- Esta migração cria uma nova estrutura limpa separando dados pessoais de credenciais
+
+-- 1. Criar tabela de usuários (dados do perfil)
+CREATE TABLE users (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    date_of_birth DATE,
+    gender VARCHAR(20) CHECK (gender IN ('MALE', 'FEMALE', 'OTHER', 'PREFER_NOT_TO_SAY')),
+    picture_url TEXT,
+    email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Criar tabela de autenticação local (email/senha)
+CREATE TABLE local_accounts (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(26) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    last_login_at TIMESTAMP,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 3. Criar tabela de autenticação OAuth2
+CREATE TABLE oauth_accounts (
+    id VARCHAR(26) NOT NULL PRIMARY KEY,
+    user_id VARCHAR(26) NOT NULL,
+    provider VARCHAR(50) NOT NULL, -- 'GOOGLE', 'FACEBOOK', 'GITHUB', etc.
+    provider_user_id VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    provider_name VARCHAR(255), -- Nome no provedor (pode ser diferente do user.name)
+    profile_image_url TEXT,
+    access_token TEXT,
+    refresh_token TEXT,
+    token_expiry TIMESTAMP,
+    last_login_at TIMESTAMP,
+    linked_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    UNIQUE (provider, provider_user_id)
+);
+
+-- 4. Migrar dados existentes da tabela accounts para nova estrutura
+INSERT INTO users (id, name, email, picture_url, email_verified, created_at, updated_at)
+SELECT 
+    id, 
+    name, 
+    email, 
+    picture_url, 
+    COALESCE(email_verified, false),
+    created_at, 
+    updated_at 
+FROM accounts;
+
+-- 5. Migrar contas locais (não Google)
+INSERT INTO local_accounts (id, user_id, email, password_hash, last_login_at, created_at, updated_at)
+SELECT 
+    CONCAT(id, '-local'),
+    id,
+    email,
+    password,
+    last_login_at,
+    created_at,
+    updated_at
+FROM accounts 
+WHERE google_account = false AND password IS NOT NULL;
+
+-- 6. Migrar contas OAuth2 (Google)
+INSERT INTO oauth_accounts (id, user_id, provider, provider_user_id, email, provider_name, profile_image_url, last_login_at, linked_at, is_primary, created_at, updated_at)
+SELECT 
+    CONCAT(id, '-oauth'),
+    id,
+    'GOOGLE',
+    COALESCE(google_id, email), -- fallback para email se google_id for null
+    email,
+    name,
+    picture_url,
+    last_login_at,
+    created_at,
+    true, -- is_primary
+    created_at,
+    updated_at
+FROM accounts 
+WHERE google_account = true;
+
+-- 7. Índices para performance
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_local_accounts_email ON local_accounts(email);
+CREATE INDEX idx_local_accounts_user_id ON local_accounts(user_id);
+CREATE INDEX idx_oauth_accounts_user_id ON oauth_accounts(user_id);
+CREATE INDEX idx_oauth_accounts_provider_id ON oauth_accounts(provider, provider_user_id);
+
+-- Comentários sobre a nova estrutura:
+-- 1. users: Dados pessoais do usuário (nome, email, data nascimento, gênero, etc.)
+-- 2. local_accounts: Credenciais locais (um usuário pode ter apenas uma conta local)
+-- 3. oauth_accounts: Credenciais OAuth2 (um usuário pode ter múltiplas contas sociais)
+-- 4. Separação clara entre dados pessoais e credenciais
+-- 5. Suporte a múltiplos provedores OAuth2 por usuário
+-- 6. Estrutura mais flexível e escalável
