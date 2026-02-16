@@ -4,9 +4,9 @@ info:
   version: 1.0.0
   description: API for PillMind - Medication Management System
 servers:
-  - url: https://YOUR-RAILWAY-DOMAIN.railway.app
+  - url: https://pillmind-backend-staging.up.railway.app
     description: Production (Railway)
-  - url: http://localhost:7000
+  - url: http://localhost:8080
     description: Local Development
 paths:
   /api/health:
@@ -35,7 +35,7 @@ paths:
       tags:
         - Authentication
       summary: User Sign Up
-      description: Register a new user account
+      description: Register a new user account with complete profile
       requestBody:
         required: true
         content:
@@ -54,11 +54,23 @@ paths:
                 password:
                   type: string
                   format: password
-                  minLength: 8
+                  minLength: 6
                   example: SecurePass123
                 name:
                   type: string
                   example: John Doe
+                dateOfBirth:
+                  type: string
+                  format: date
+                  example: "1990-05-15"
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY]
+                  example: MALE
+                pictureUrl:
+                  type: string
+                  format: uri
+                  example: https://example.com/avatar.jpg
       responses:
         "201":
           description: User created successfully
@@ -67,15 +79,28 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
-                    type: integer
-                    example: 1
-                  email:
+                  userId:
                     type: string
-                    example: user@example.com
+                    example: "user-123-uuid"
                   name:
                     type: string
                     example: John Doe
+                  email:
+                    type: string
+                    example: user@example.com
+                  dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1990-05-15"
+                  gender:
+                    type: string
+                    example: MALE
+                  pictureUrl:
+                    type: string
+                    example: https://example.com/avatar.jpg
+                  emailVerified:
+                    type: boolean
+                    example: false
         "400":
           description: Validation error
           content:
@@ -121,21 +146,31 @@ paths:
               schema:
                 type: object
                 properties:
-                  token:
+                  accessToken:
                     type: string
                     example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-                  user:
-                    type: object
-                    properties:
-                      id:
-                        type: integer
-                        example: 1
-                      email:
-                        type: string
-                        example: user@example.com
-                      name:
-                        type: string
-                        example: John Doe
+                  userId:
+                    type: string
+                    example: "user-123-uuid"
+                  name:
+                    type: string
+                    example: John Doe
+                  email:
+                    type: string
+                    example: user@example.com
+                  dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1990-05-15"
+                  gender:
+                    type: string
+                    example: MALE
+                  pictureUrl:
+                    type: string
+                    example: https://example.com/avatar.jpg
+                  emailVerified:
+                    type: boolean
+                    example: true
         "400":
           description: Validation error
         "401":
@@ -161,6 +196,39 @@ paths:
       responses:
         "200":
           description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                  userId:
+                    type: string
+                    example: "user-123-uuid"
+                  name:
+                    type: string
+                    example: John Doe
+                  email:
+                    type: string
+                    example: user@example.com
+                  dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1990-05-15"
+                  gender:
+                    type: string
+                    example: MALE
+                  pictureUrl:
+                    type: string
+                    example: https://example.com/avatar.jpg
+                  emailVerified:
+                    type: boolean
+                    example: true
+                  isNewUser:
+                    type: boolean
+                    example: false
         "400":
           description: Validation error
         "401":
@@ -176,6 +244,96 @@ paths:
       responses:
         "200":
           description: Profile data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    example: "user-123-uuid"
+                  name:
+                    type: string
+                    example: John Doe
+                  email:
+                    type: string
+                    example: user@example.com
+                  dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1990-05-15"
+                  gender:
+                    type: string
+                    example: MALE
+                  pictureUrl:
+                    type: string
+                    example: https://example.com/avatar.jpg
+                  emailVerified:
+                    type: boolean
+                    example: true
+        "401":
+          description: Unauthorized
+    put:
+      tags:
+        - Profile
+      summary: Update user profile
+      description: Updates the authenticated user profile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: Jane Doe
+                dateOfBirth:
+                  type: string
+                  format: date
+                  example: "1992-03-20"
+                gender:
+                  type: string
+                  enum: [MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY]
+                  example: FEMALE
+                pictureUrl:
+                  type: string
+                  format: uri
+                  example: https://example.com/new-avatar.jpg
+      responses:
+        "200":
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId:
+                    type: string
+                    example: "user-123-uuid"
+                  name:
+                    type: string
+                    example: Jane Doe
+                  email:
+                    type: string
+                    example: user@example.com
+                  dateOfBirth:
+                    type: string
+                    format: date
+                    example: "1992-03-20"
+                  gender:
+                    type: string
+                    example: FEMALE
+                  pictureUrl:
+                    type: string
+                    example: https://example.com/new-avatar.jpg
+                  emailVerified:
+                    type: boolean
+                    example: true
+        "400":
+          description: Validation error
         "401":
           description: Unauthorized
 components:

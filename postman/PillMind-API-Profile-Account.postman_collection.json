@@ -55,7 +55,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"name\": \"João Silva Santos\",\n  \"email\": \"joao.santos@example.com\",\n  \"phone\": \"(11) 98765-4321\",\n  \"avatar\": \"https://example.com/avatar.jpg\"\n}"
+          "raw": "{\n  \"name\": \"João Silva Santos\",\n  \"email\": \"joao.santos@example.com\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"gender\": \"MALE\",\n  \"pictureUrl\": \"https://example.com/avatar-updated.jpg\"\n}"
         },
         "url": {
           "raw": "{{baseUrl}}/api/profile",
