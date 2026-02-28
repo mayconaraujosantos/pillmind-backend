@@ -278,9 +278,11 @@ Obter dados do perfil do usuário
   "id": "user123",
   "name": "João Silva",
   "email": "joao@example.com",
-  "phone": "(11) 98765-4321",
-  "avatar": "https://...",
-  "createdAt": "2026-01-01T00:00:00"
+  "dateOfBirth": "1990-05-15",
+  "gender": "MALE",
+  "pictureUrl": "https://example.com/avatar.jpg",
+  "emailVerified": true,
+  "updatedAt": "2026-01-01T00:00:00"
 }
 ```
 
@@ -292,10 +294,20 @@ Atualizar perfil do usuário
 {
   "name": "João Silva Santos",
   "email": "joao.santos@example.com",
-  "phone": "(11) 98765-4321",
-  "avatar": "https://..."
+  "dateOfBirth": "1990-05-15",
+  "gender": "MALE",
+  "pictureUrl": "https://example.com/avatar-updated.jpg"
 }
 ```
+
+**Campos disponíveis:**
+- `name` - Nome completo do usuário
+- `email` - Email do usuário  
+- `dateOfBirth` - Data de nascimento (formato: YYYY-MM-DD)
+- `gender` - Gênero (MALE, FEMALE, OTHER, PREFER_NOT_TO_SAY)
+- `pictureUrl` - URL da foto de perfil/avatar
+
+**Todos os campos são opcionais** - apenas os campos enviados serão atualizados.
 
 ### POST /api/feedback
 

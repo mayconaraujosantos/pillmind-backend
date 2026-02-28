@@ -1,0 +1,15 @@
+-- Migration V7: Corrigir tamanho das colunas ID para suportar UUIDs (36 caracteres)
+-- UUIDs padrão têm formato: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" (36 chars)
+
+-- Corrigir tamanho da coluna ID na tabela users
+ALTER TABLE users ALTER COLUMN id TYPE VARCHAR(36);
+
+-- Corrigir tamanho da coluna user_id na tabela local_accounts
+ALTER TABLE local_accounts ALTER COLUMN user_id TYPE VARCHAR(36);
+
+-- Corrigir tamanho da coluna id na tabela local_accounts 
+ALTER TABLE local_accounts ALTER COLUMN id TYPE VARCHAR(36);
+
+-- Corrigir tamanho das colunas ID na tabela oauth_accounts
+ALTER TABLE oauth_accounts ALTER COLUMN id TYPE VARCHAR(36);
+ALTER TABLE oauth_accounts ALTER COLUMN user_id TYPE VARCHAR(36);

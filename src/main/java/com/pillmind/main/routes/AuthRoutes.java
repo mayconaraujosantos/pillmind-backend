@@ -4,55 +4,62 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pillmind.data.protocols.cryptography.Decrypter;
-import com.pillmind.domain.usecases.AddAccount;
-import com.pillmind.domain.usecases.Authentication;
-import com.pillmind.domain.usecases.LoadAccountById;
+import com.pillmind.domain.usecases.CreateLocalAccount;
+import com.pillmind.domain.usecases.LinkOAuthAccount;
+import com.pillmind.domain.usecases.LoadUserById;
+import com.pillmind.domain.usecases.LocalAuthentication;
+import com.pillmind.domain.usecases.UpdateUserProfile;
 import com.pillmind.presentation.controllers.GoogleAuthController;
 import com.pillmind.presentation.controllers.ProfileController;
 import com.pillmind.presentation.controllers.SignInController;
 import com.pillmind.presentation.controllers.SignUpController;
+import com.pillmind.presentation.controllers.UpdateProfileController;
 import com.pillmind.presentation.helpers.LogSanitizer;
 import com.pillmind.presentation.protocols.Validation;
 
 import io.javalin.Javalin;
 
 /**
- * Rotas de autenticação (Sign Up e Sign In)
+ * Rotas de autenticação e perfil (Sign Up, Sign In, Profile)
  */
 public class AuthRoutes implements Routes {
   private static final Logger logger = LoggerFactory.getLogger(AuthRoutes.class);
 
-  private final AddAccount addAccount;
-  private final Authentication authentication;
+  private final CreateLocalAccount createLocalAccount;
+  private final LocalAuthentication localAuthentication;
   private final Validation<SignUpController.SignUpRequest> signUpValidation;
   private final Validation<SignInController.SignInRequest> signInValidation;
   private final GoogleAuthController googleAuthController;
-  private final LoadAccountById loadAccountById;
+  private final LoadUserById loadUserById;
+  private final UpdateUserProfile updateUserProfile;
   private final Decrypter decrypter;
 
   // Constructor com injeção de dependências
   public AuthRoutes(
-      AddAccount addAccount,
-      Authentication authentication,
+      CreateLocalAccount createLocalAccount,
+      LocalAuthentication localAuthentication,
       Validation<SignUpController.SignUpRequest> signUpValidation,
       Validation<SignInController.SignInRequest> signInValidation,
       GoogleAuthController googleAuthController,
-      LoadAccountById loadAccountById,
+      LoadUserById loadUserById,
+      UpdateUserProfile updateUserProfile,
       Decrypter decrypter) {
-    this.addAccount = addAccount;
-    this.authentication = authentication;
+    this.createLocalAccount = createLocalAccount;
+    this.localAuthentication = localAuthentication;
     this.signUpValidation = signUpValidation;
     this.signInValidation = signInValidation;
     this.googleAuthController = googleAuthController;
-    this.loadAccountById = loadAccountById;
+    this.loadUserById = loadUserById;
+    this.updateUserProfile = updateUserProfile;
     this.decrypter = decrypter;
   }
 
   @Override
   public void setup(Javalin app) {
-    var signUpController = new SignUpController(addAccount, authentication, signUpValidation);
-    var signInController = new SignInController(authentication, signInValidation);
-    var profileController = new ProfileController(loadAccountById, decrypter);
+    var signUpController = new SignUpController(createLocalAccount, signUpValidation);
+    var signInController = new SignInController(localAuthentication, signInValidation);
+    var profileController = new ProfileController(loadUserById, decrypter);
+    var updateProfileController = new UpdateProfileController(updateUserProfile, loadUserById, decrypter);
 
     // Route: POST /api/signup
     app.post("/api/signup", ctx -> {
@@ -79,6 +86,13 @@ public class AuthRoutes implements Routes {
     app.get("/api/profile", ctx -> {
       logger.info("→ GET /api/profile - User profile");
       profileController.handle(ctx);
+    });
+
+    // Route: PUT /api/profile
+    app.put("/api/profile", ctx -> {
+      logger.info("→ PUT /api/profile - Update user profile");
+      updateProfileController.handle(ctx);
+      logger.info("✓ Profile updated successfully");
     });
   }
 }

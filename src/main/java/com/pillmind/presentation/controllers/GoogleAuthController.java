@@ -1,37 +1,43 @@
 package com.pillmind.presentation.controllers;
 
+import java.time.LocalDate;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.pillmind.data.protocols.cryptography.Encrypter;
 import com.pillmind.domain.errors.ValidationException;
-import com.pillmind.domain.usecases.AddAccount;
-import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.domain.models.AuthProvider;
+import com.pillmind.domain.usecases.LinkOAuthAccount;
 import com.pillmind.infra.oauth.GoogleTokenValidator;
 import com.pillmind.presentation.protocols.Controller;
 
 import io.javalin.http.Context;
 
 /**
- * Controller para autenticação via Google OAuth2
+ * Controller para autenticação via Google OAuth2 - Nova estrutura
  * Recebe o ID Token do Google e cria/autentica o usuário
  */
 public class GoogleAuthController implements Controller {
     private static final Logger logger = LoggerFactory.getLogger(GoogleAuthController.class);
-    private final AddAccount addAccount;
-    private final Authentication authentication;
+    private final LinkOAuthAccount linkOAuthAccount;
+    private final Encrypter encrypter;
     private final GoogleTokenValidator googleTokenValidator;
     private final ObjectMapper objectMapper;
 
     public GoogleAuthController(
-            AddAccount addAccount,
-            Authentication authentication,
+            LinkOAuthAccount linkOAuthAccount,
+            Encrypter encrypter,
             GoogleTokenValidator googleTokenValidator) {
-        this.addAccount = addAccount;
-        this.authentication = authentication;
+        this.linkOAuthAccount = linkOAuthAccount;
+        this.encrypter = encrypter;
         this.googleTokenValidator = googleTokenValidator;
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.registerModule(new JavaTimeModule());
     }
 
     @Override
@@ -47,26 +53,31 @@ public class GoogleAuthController implements Controller {
             var googleUserInfo = googleTokenValidator.validate(request.idToken());
             logger.info("Login Google para: {}", googleUserInfo.email());
 
-                // Tenta criar ou atualizar a conta Google
-                var params = new AddAccount.Params(
-                    googleUserInfo.name(),
-                    googleUserInfo.email(),
-                    null, // Google accounts não têm senha
-                    true, // googleAccount = true
-                    googleUserInfo.googleId(),
-                    googleUserInfo.pictureUrl());
+            // Vincular/criar conta OAuth2
+            var params = new LinkOAuthAccount.Params(
+                AuthProvider.GOOGLE,
+                googleUserInfo.googleId(),
+                googleUserInfo.email(),
+                googleUserInfo.name(),
+                googleUserInfo.pictureUrl());
 
-                var account = addAccount.execute(params);
+            var result = linkOAuthAccount.execute(params);
+            
+            // Gerar token de acesso
+            var accessToken = encrypter.encrypt(result.user().id());
 
-                // Autentica sempre após criar/atualizar
-                var authResult = authentication.execute(
-                    new Authentication.Params(account.email(), null));
+            var response = new GoogleAuthResponse(
+                    accessToken,
+                    result.user().id(),
+                    result.user().name(),
+                    result.user().email(),
+                    result.user().dateOfBirth(),
+                    result.user().gender() != null ? result.user().gender().name() : null,
+                    result.user().pictureUrl(),
+                    result.user().emailVerified(),
+                    result.isNewUser());
 
-                ctx.status(200).json(new GoogleAuthResponse(
-                    authResult.accessToken(),
-                    account.id(),
-                    account.name(),
-                    account.email()));
+            ctx.status(200).json(response);
         } catch (JsonProcessingException e) {
             throw new ValidationException("Formato JSON inválido na requisição", e);
         }
@@ -77,8 +88,14 @@ public class GoogleAuthController implements Controller {
 
     public record GoogleAuthResponse(
             String accessToken,
-            String accountId,
+            String userId,
             String name,
-            String email) {
+            String email,
+            @JsonFormat(pattern = "yyyy-MM-dd")
+            LocalDate dateOfBirth,
+            String gender,
+            String pictureUrl,
+            boolean emailVerified,
+            boolean isNewUser) {
     }
 }

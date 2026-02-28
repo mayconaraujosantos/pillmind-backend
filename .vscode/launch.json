@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "BcryptHashGenerator",
+      "request": "launch",
+      "mainClass": "com.pillmind.util.BcryptHashGenerator",
+      "projectName": "pillmind-backend"
+    },
+    {
+      "type": "java",
       "name": "Debug PillMind",
       "request": "launch",
       "mainClass": "com.pillmind.Main",

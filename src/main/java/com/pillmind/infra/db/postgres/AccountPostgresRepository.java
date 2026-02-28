@@ -27,8 +27,8 @@ public class AccountPostgresRepository extends PostgresRepository
 
   @Override
   public Account add(Account account) {
-    String sql = "INSERT INTO accounts (id, name, email, password, google_account, google_id, picture_url, last_login_at, created_at, updated_at) " +
-        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    String sql = "INSERT INTO accounts (id, name, email, password, google_account, google_id, picture_url, last_login_at, auth_provider, email_verified, created_at, updated_at) " +
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setString(1, account.id());
@@ -39,8 +39,10 @@ public class AccountPostgresRepository extends PostgresRepository
       stmt.setString(6, account.googleId());
       stmt.setString(7, account.pictureUrl());
       stmt.setObject(8, account.lastLoginAt());
-      stmt.setObject(9, account.createdAt());
-      stmt.setObject(10, account.updatedAt());
+      stmt.setString(9, account.authProvider().getValue());
+      stmt.setBoolean(10, account.emailVerified());
+      stmt.setObject(11, account.createdAt());
+      stmt.setObject(12, account.updatedAt());
 
       stmt.executeUpdate();
       return account;
@@ -52,7 +54,7 @@ public class AccountPostgresRepository extends PostgresRepository
 
   @Override
   public Optional<Account> loadByEmail(String email) {
-    String sql = "SELECT id, name, email, password, google_account, google_id, picture_url, last_login_at, created_at, updated_at " +
+    String sql = "SELECT id, name, email, password, google_account, google_id, picture_url, last_login_at, auth_provider, email_verified, created_at, updated_at " +
         "FROM accounts WHERE email = ?";
 
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -69,6 +71,8 @@ public class AccountPostgresRepository extends PostgresRepository
               rs.getString("google_id"),
               rs.getString("picture_url"),
               rs.getTimestamp("last_login_at") != null ? rs.getTimestamp("last_login_at").toLocalDateTime() : null,
+              rs.getString("auth_provider"),
+              rs.getBoolean("email_verified"),
               rs.getTimestamp("created_at").toLocalDateTime(),
               rs.getTimestamp("updated_at").toLocalDateTime()));
         }
@@ -82,7 +86,7 @@ public class AccountPostgresRepository extends PostgresRepository
 
   @Override
   public Optional<Account> loadById(String id) {
-    String sql = "SELECT id, name, email, password, google_account, google_id, picture_url, last_login_at, created_at, updated_at " +
+    String sql = "SELECT id, name, email, password, google_account, google_id, picture_url, last_login_at, auth_provider, email_verified, created_at, updated_at " +
         "FROM accounts WHERE id = ?";
 
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -99,6 +103,8 @@ public class AccountPostgresRepository extends PostgresRepository
               rs.getString("google_id"),
               rs.getString("picture_url"),
               rs.getTimestamp("last_login_at") != null ? rs.getTimestamp("last_login_at").toLocalDateTime() : null,
+              rs.getString("auth_provider"),
+              rs.getBoolean("email_verified"),
               rs.getTimestamp("created_at").toLocalDateTime(),
               rs.getTimestamp("updated_at").toLocalDateTime()));
         }
@@ -112,15 +118,17 @@ public class AccountPostgresRepository extends PostgresRepository
 
   @Override
   public Account update(Account account) {
-    String sql = "UPDATE accounts SET name = ?, google_id = ?, picture_url = ?, last_login_at = ?, updated_at = ? WHERE id = ?";
+    String sql = "UPDATE accounts SET name = ?, google_id = ?, picture_url = ?, last_login_at = ?, auth_provider = ?, email_verified = ?, updated_at = ? WHERE id = ?";
 
     try (PreparedStatement stmt = connection.prepareStatement(sql)) {
       stmt.setString(1, account.name());
       stmt.setString(2, account.googleId());
       stmt.setString(3, account.pictureUrl());
       stmt.setObject(4, account.lastLoginAt());
-      stmt.setObject(5, account.updatedAt());
-      stmt.setString(6, account.id());
+      stmt.setString(5, account.authProvider().getValue());
+      stmt.setBoolean(6, account.emailVerified());
+      stmt.setObject(7, account.updatedAt());
+      stmt.setString(8, account.id());
 
       stmt.executeUpdate();
       return account;

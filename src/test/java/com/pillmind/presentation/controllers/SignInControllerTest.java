@@ -9,31 +9,43 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
 import org.junit.jupiter.api.Test;
 
 import com.pillmind.domain.errors.UnauthorizedException;
 import com.pillmind.domain.errors.ValidationException;
-import com.pillmind.domain.usecases.Authentication;
+import com.pillmind.domain.models.Gender;
+import com.pillmind.domain.models.User;
+import com.pillmind.domain.usecases.LocalAuthentication;
 import com.pillmind.presentation.handlers.ErrorHandlers;
 import com.pillmind.presentation.validators.SignInValidation;
 
 import io.javalin.testtools.JavalinTest;
 
 /**
- * Testes para SignInController
+ * Testes para SignInController - Nova estrutura
  */
 public class SignInControllerTest {
+
+  private User makeUser() {
+    return new User("user-id", "John Doe", "john@example.com", LocalDate.of(1990, 5, 15), Gender.MALE, null, true, 
+                   LocalDateTime.now(), LocalDateTime.now());
+  }
+
   @Test
   public void shouldReturn200WithAccessTokenOnSuccess() {
-    var authentication = mock(Authentication.class);
+    var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
-    when(authentication.execute(any(Authentication.Params.class)))
-        .thenReturn(new Authentication.Result("access-token-123", "account-id"));
+    var user = makeUser();
+    when(localAuthentication.execute(any(LocalAuthentication.Params.class)))
+        .thenReturn(new LocalAuthentication.Result("access-token-123", user));
 
     JavalinTest.test((app, client) -> {
       ErrorHandlers.configure(app);
-      app.post("/api/signin", new SignInController(authentication, validator)::handle);
+      app.post("/api/signin", new SignInController(localAuthentication, validator)::handle);
 
       var response = client.post("/api/signin", """
           {
@@ -44,21 +56,21 @@ public class SignInControllerTest {
 
       assertEquals(200, response.code());
       assertTrue(response.body().string().contains("access-token-123"));
-      verify(authentication).execute(any(Authentication.Params.class));
+      verify(localAuthentication).execute(any(LocalAuthentication.Params.class));
     });
   }
 
   @Test
   public void shouldReturn401WhenCredentialsAreInvalid() {
-    var authentication = mock(Authentication.class);
+    var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
-    when(authentication.execute(any(Authentication.Params.class)))
+    when(localAuthentication.execute(any(LocalAuthentication.Params.class)))
         .thenThrow(new UnauthorizedException("Email ou senha inválidos"));
 
     JavalinTest.test((app, client) -> {
       ErrorHandlers.configure(app);
-      app.post("/api/signin", new SignInController(authentication, validator)::handle);
+      app.post("/api/signin", new SignInController(localAuthentication, validator)::handle);
 
       try (var response = client.post("/api/signin", """
           {
@@ -74,7 +86,7 @@ public class SignInControllerTest {
 
   @Test
   public void shouldReturn400WhenRequestIsInvalid() {
-    var authentication = mock(Authentication.class);
+    var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
     // Quando a validação for chamada com qualquer request, lança exceção para
@@ -83,7 +95,7 @@ public class SignInControllerTest {
 
     JavalinTest.test((app, client) -> {
       ErrorHandlers.configure(app);
-      app.post("/api/signin", new SignInController(authentication, validator)::handle);
+      app.post("/api/signin", new SignInController(localAuthentication, validator)::handle);
       var payload = """
           {
             "email": "test@example.com",
@@ -94,7 +106,7 @@ public class SignInControllerTest {
 
         assertEquals(400, response.code());
       }
-      verify(authentication, never()).execute(any());
+      verify(localAuthentication, never()).execute(any());
     });
   }
 }

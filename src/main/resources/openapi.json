@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "https://pillmind.192.168.1.7.nip.io",
-      "description": "Development Server"
+      "url": "https://pillmind-backend-staging.up.railway.app",
+      "description": "Production (Railway)"
     },
     {
       "url": "http://localhost:8080",
@@ -48,6 +48,433 @@
     },
     "/api/signup": {
       "post": {
+        "tags": ["Authentication"],
+        "summary": "User Sign Up",
+        "description": "Register a new user account with complete profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password", "name"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 6,
+                    "example": "SecurePass123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "dateOfBirth": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "1990-05-15"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"],
+                    "example": "MALE"
+                  },
+                  "pictureUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://example.com/avatar.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "example": "user-123-uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@example.com"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1990-05-15"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "MALE"
+                    },
+                    "pictureUrl": {
+                      "type": "string",
+                      "example": "https://example.com/avatar.jpg"
+                    },
+                    "emailVerified": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "User already exists"
+          }
+        }
+      }
+    },
+    "/api/signin": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "User Sign In",
+        "description": "Authenticate user and get JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "example": "SecurePass123"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "userId": {
+                      "type": "string",
+                      "example": "user-123-uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@example.com"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1990-05-15"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "MALE"
+                    },
+                    "pictureUrl": {
+                      "type": "string",
+                      "example": "https://example.com/avatar.jpg"
+                    },
+                    "emailVerified": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "post": {
+        "tags": ["Authentication"],
+        "summary": "Google OAuth2 Sign In",
+        "description": "Authenticate user via Google OAuth2 and get JWT token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["idToken"],
+                "properties": {
+                  "idToken": {
+                    "type": "string",
+                    "description": "Google ID token"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "accessToken": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    },
+                    "userId": {
+                      "type": "string",
+                      "example": "user-123-uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@example.com"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1990-05-15"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "MALE"
+                    },
+                    "pictureUrl": {
+                      "type": "string",
+                      "example": "https://example.com/avatar.jpg"
+                    },
+                    "emailVerified": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "isNewUser": {
+                      "type": "boolean",
+                      "example": false
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Invalid token"
+          }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "tags": ["Profile"],
+        "summary": "Get user profile",
+        "description": "Returns the authenticated user profile",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Profile data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "example": "user-123-uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "John Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@example.com"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1990-05-15"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "MALE"
+                    },
+                    "pictureUrl": {
+                      "type": "string",
+                      "example": "https://example.com/avatar.jpg"
+                    },
+                    "emailVerified": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Profile"],
+        "summary": "Update user profile",
+        "description": "Updates the authenticated user profile",
+        "security": [{"bearerAuth": []}],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "example": "Jane Doe"
+                  },
+                  "dateOfBirth": {
+                    "type": "string",
+                    "format": "date",
+                    "example": "1992-03-20"
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": ["MALE", "FEMALE", "OTHER", "PREFER_NOT_TO_SAY"],
+                    "example": "FEMALE"
+                  },
+                  "pictureUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "example": "https://example.com/new-avatar.jpg"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Profile updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "example": "user-123-uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Jane Doe"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "user@example.com"
+                    },
+                    "dateOfBirth": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "1992-03-20"
+                    },
+                    "gender": {
+                      "type": "string",
+                      "example": "FEMALE"
+                    },
+                    "pictureUrl": {
+                      "type": "string",
+                      "example": "https://example.com/new-avatar.jpg"
+                    },
+                    "emailVerified": {
+                      "type": "boolean",
+                      "example": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error"
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
         "tags": ["Authentication"],
         "summary": "User Sign Up",
         "description": "Register a new user account",

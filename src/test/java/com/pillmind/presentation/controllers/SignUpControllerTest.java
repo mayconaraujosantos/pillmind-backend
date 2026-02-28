@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
 
@@ -17,13 +18,13 @@ import org.junit.jupiter.api.Test;
 
 import com.pillmind.domain.errors.ConflictException;
 import com.pillmind.domain.errors.ValidationException;
-import com.pillmind.domain.models.Account;
-import com.pillmind.domain.usecases.AddAccount;
+import com.pillmind.domain.models.Gender;
+import com.pillmind.domain.models.User;
+import com.pillmind.domain.usecases.CreateLocalAccount;
 import com.pillmind.presentation.controllers.SignUpController.SignUpRequest;
 import com.pillmind.presentation.handlers.ErrorHandlers;
 import com.pillmind.presentation.protocols.Validation;
 import com.pillmind.presentation.validators.SignUpValidation;
-import com.pillmind.domain.usecases.Authentication;
 
 import io.javalin.Javalin;
 import io.javalin.testtools.JavalinTest;
@@ -31,8 +32,7 @@ import io.javalin.testtools.HttpClient;
 
 class SignUpControllerTest {
 
-  private AddAccount addAccount;
-  private Authentication authentication;
+  private CreateLocalAccount createLocalAccount;
   private Validation<SignUpRequest> validation;
   private SignUpController signUpController;
 
@@ -44,18 +44,15 @@ class SignUpControllerTest {
     return LocalDateTime.now();
   }
 
-  private Account makedAccount(String id, String name, String email, boolean googleAccount) {
-    return new Account(id, name, email, null, googleAccount, null, null, null, createdAt(), updatedAt());
+  private User makeUser(String id, String name, String email) {
+    return new User(id, name, email, LocalDate.of(1990, 5, 15), Gender.OTHER, null, true, createdAt(), updatedAt());
   }
-
-
 
   @BeforeEach
   void setUp() {
-    addAccount = mock(AddAccount.class);
-    authentication = mock(Authentication.class);
+    createLocalAccount = mock(CreateLocalAccount.class);
     validation = mock(SignUpValidation.class);
-    signUpController = new SignUpController(addAccount, authentication, validation);
+    signUpController = new SignUpController(createLocalAccount, validation);
   }
 
   private void withSignUpApp(BiConsumer<Javalin, HttpClient> test) {
@@ -66,13 +63,11 @@ class SignUpControllerTest {
     });
   }
 
-
   @Test
-  @DisplayName("Should return 201 with account data on successful user creation")
-  void shouldReturn201WithAccountDataOnSuccess() {
-    var account = makedAccount("account-id", "John Doe", "john@example.com", false);
-    when(addAccount.execute(any(AddAccount.Params.class))).thenReturn(account);
-    when(authentication.execute(any(Authentication.Params.class))).thenReturn(new Authentication.Result("token-123", "account-id"));
+  @DisplayName("Should return 201 with user data on successful user creation")
+  void shouldReturn201WithUserDataOnSuccess() {
+    var user = makeUser("user-id", "John Doe", "john@example.com");
+    when(createLocalAccount.execute(any(CreateLocalAccount.Params.class))).thenReturn(new CreateLocalAccount.Result(user, "local-account-id"));
 
     withSignUpApp((app, client) -> {
       var response = client.post("/api/signup", """
@@ -80,13 +75,14 @@ class SignUpControllerTest {
             "name": "John Doe",
             "email": "john@example.com",
             "password": "validPassword123",
-            "googleAccount": false
+            "dateOfBirth": "1990-05-15",
+            "gender": "OTHER"
           }
           """);
 
       assertEquals(201, response.code());
       verify(validation).validate(any(SignUpRequest.class));
-      verify(addAccount).execute(any(AddAccount.Params.class));
+      verify(createLocalAccount).execute(any(CreateLocalAccount.Params.class));
     });
   }
 
@@ -105,14 +101,14 @@ class SignUpControllerTest {
           """);
 
       assertEquals(400, response.code());
-      verify(addAccount, never()).execute(any());
+      verify(createLocalAccount, never()).execute(any());
     });
   }
 
   @Test
   void shouldReturn409WhenEmailAlreadyExists() {
 
-    when(addAccount.execute(any(AddAccount.Params.class)))
+    when(createLocalAccount.execute(any(CreateLocalAccount.Params.class)))
         .thenThrow(new ConflictException("Email already exists"));
 
     withSignUpApp((app, client) -> {
@@ -121,12 +117,12 @@ class SignUpControllerTest {
             "name": "John Doe",
             "email": "existing@example.com",
             "password": "validPassword123",
-            "googleAccount": false
+            "dateOfBirth": "1990-05-15",
+            "gender": "MALE"
           }
           """);
 
       assertEquals(409, response.code());
     });
   }
-
 }

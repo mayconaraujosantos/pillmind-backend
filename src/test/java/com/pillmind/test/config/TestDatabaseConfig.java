@@ -83,11 +83,14 @@ public class TestDatabaseConfig {
     }
 
     /**
-     * Limpa todos os dados das tabelas
+     * Limpa todos os dados das tabelas - Nova estrutura
      */
     public static void cleanAllTables() throws SQLException {
         logger.debug("Limpando todas as tabelas...");
-        cleanTable("accounts");
+        // Ordem de limpeza para respeitar foreign keys
+        cleanTable("oauth_accounts");
+        cleanTable("local_accounts");
+        cleanTable("users");
     }
 
     /**
