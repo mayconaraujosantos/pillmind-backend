@@ -6,7 +6,7 @@ info:
 servers:
   - url: https://pillmind-backend-staging.up.railway.app
     description: Production (Railway)
-  - url: http://localhost:8080
+  - url: http://localhost:8182
     description: Local Development
 paths:
   /api/health:

@@ -42,3 +42,5 @@ docker/.env
 # Temporary files
 tmp/
 temp/
+# Uploads directory
+uploads/
