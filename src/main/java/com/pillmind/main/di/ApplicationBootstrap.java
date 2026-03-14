@@ -5,22 +5,30 @@ import java.sql.Connection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.pillmind.data.protocols.storage.ImageStorageGateway;
+import com.pillmind.data.usecases.DbConfirmImageUpload;
 import com.pillmind.data.usecases.DbCreateLocalAccount;
 import com.pillmind.data.usecases.DbLinkOAuthAccount;
 import com.pillmind.data.usecases.DbLoadUserById;
 import com.pillmind.data.usecases.DbLocalAuthentication;
+import com.pillmind.data.usecases.DbRequestImageUpload;
 import com.pillmind.data.usecases.DbUpdateUserProfile;
+import com.pillmind.domain.usecases.ConfirmImageUpload;
 import com.pillmind.domain.usecases.CreateLocalAccount;
 import com.pillmind.domain.usecases.LinkOAuthAccount;
 import com.pillmind.domain.usecases.LoadUserById;
 import com.pillmind.domain.usecases.LocalAuthentication;
+import com.pillmind.domain.usecases.RequestImageUpload;
 import com.pillmind.domain.usecases.UpdateUserProfile;
 import com.pillmind.infra.cryptography.BcryptAdapter;
 import com.pillmind.infra.cryptography.JwtAdapter;
 import com.pillmind.infra.db.postgres.LocalAccountPostgresRepository;
 import com.pillmind.infra.db.postgres.OAuthAccountPostgresRepository;
+import com.pillmind.infra.db.postgres.UserImagePostgresRepository;
 import com.pillmind.infra.db.postgres.UserPostgresRepository;
 import com.pillmind.infra.oauth.GoogleTokenValidator;
+import com.pillmind.infra.storage.CloudflareImagesGateway;
+import com.pillmind.infra.storage.MinioImageStorageGateway;
 import com.pillmind.main.config.DatabaseConfig;
 import com.pillmind.main.config.Env;
 import com.pillmind.main.routes.AuthRoutes;
@@ -105,12 +113,21 @@ public class ApplicationBootstrap {
         // Repositories - Nova estrutura
         container.registerSingleton("repository.user",
                 new UserPostgresRepository(connection));
-        
-        container.registerSingleton("repository.local-account", 
+
+        container.registerSingleton("repository.local-account",
                 new LocalAccountPostgresRepository(connection));
-        
-        container.registerSingleton("repository.oauth-account", 
+
+        container.registerSingleton("repository.oauth-account",
                 new OAuthAccountPostgresRepository(connection));
+
+        container.registerSingleton("repository.user-image",
+                new UserImagePostgresRepository(connection));
+
+        ImageStorageGateway imageStorageGateway = "cloudflare".equalsIgnoreCase(Env.IMAGE_STORAGE_PROVIDER)
+                ? new CloudflareImagesGateway()
+                : new MinioImageStorageGateway();
+        container.registerSingleton("storage.image-gateway", imageStorageGateway);
+        logger.info("Image storage provider: {}", Env.IMAGE_STORAGE_PROVIDER);
 
         // OAuth2
         container.registerSingleton("oauth.google-validator",
@@ -127,13 +144,15 @@ public class ApplicationBootstrap {
         container.registerFactory("usecase.create-local-account", () -> {
             var hasher = container.resolve("crypto.hasher", BcryptAdapter.class);
             var userRepository = container.resolve("repository.user", UserPostgresRepository.class);
-            var localAccountRepository = container.resolve("repository.local-account", LocalAccountPostgresRepository.class);
+            var localAccountRepository = container.resolve("repository.local-account",
+                    LocalAccountPostgresRepository.class);
             return new DbCreateLocalAccount(hasher, userRepository, localAccountRepository);
         });
 
         // LocalAuthentication use case
         container.registerFactory("usecase.local-authentication", () -> {
-            var localAccountRepository = container.resolve("repository.local-account", LocalAccountPostgresRepository.class);
+            var localAccountRepository = container.resolve("repository.local-account",
+                    LocalAccountPostgresRepository.class);
             var userRepository = container.resolve("repository.user", UserPostgresRepository.class);
             var hashComparer = container.resolve("crypto.hasher", BcryptAdapter.class);
             var encrypter = container.resolve("crypto.jwt", JwtAdapter.class);
@@ -155,8 +174,23 @@ public class ApplicationBootstrap {
         // LinkOAuthAccount use case
         container.registerFactory("usecase.link-oauth-account", () -> {
             var userRepository = container.resolve("repository.user", UserPostgresRepository.class);
-            var oauthAccountRepository = container.resolve("repository.oauth-account", OAuthAccountPostgresRepository.class);
+            var oauthAccountRepository = container.resolve("repository.oauth-account",
+                    OAuthAccountPostgresRepository.class);
             return new DbLinkOAuthAccount(userRepository, oauthAccountRepository);
+        });
+
+        // RequestImageUpload use case
+        container.registerFactory("usecase.request-image-upload", () -> {
+            var imgGateway = container.resolve("storage.image-gateway", ImageStorageGateway.class);
+            var userImageRepository = container.resolve("repository.user-image", UserImagePostgresRepository.class);
+            return new DbRequestImageUpload(imgGateway, userImageRepository);
+        });
+
+        // ConfirmImageUpload use case
+        container.registerFactory("usecase.confirm-image-upload", () -> {
+            var imgGateway = container.resolve("storage.image-gateway", ImageStorageGateway.class);
+            var userImageRepository = container.resolve("repository.user-image", UserImagePostgresRepository.class);
+            return new DbConfirmImageUpload(imgGateway, userImageRepository);
         });
     }
 
@@ -186,6 +220,8 @@ public class ApplicationBootstrap {
             var loadUserById = container.resolve("usecase.load-user-by-id", LoadUserById.class);
             var updateUserProfile = container.resolve("usecase.update-user-profile", UpdateUserProfile.class);
             var linkOAuthAccount = container.resolve("usecase.link-oauth-account", LinkOAuthAccount.class);
+            var requestImageUpload = container.resolve("usecase.request-image-upload", RequestImageUpload.class);
+            var confirmImageUpload = container.resolve("usecase.confirm-image-upload", ConfirmImageUpload.class);
             var signUpValidation = container.resolve("validator.signup", SignUpValidation.class);
             var signInValidation = container.resolve("validator.signin", SignInValidation.class);
             var googleTokenValidator = container.resolve("oauth.google-validator", GoogleTokenValidator.class);
@@ -201,6 +237,8 @@ public class ApplicationBootstrap {
                     googleAuthController,
                     loadUserById,
                     updateUserProfile,
+                    requestImageUpload,
+                    confirmImageUpload,
                     decrypter);
         });
     }

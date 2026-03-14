@@ -69,6 +69,9 @@ dependencies {
     // Caching (opcional)
     implementation("redis.clients:jedis:4.4.3")
 
+    // MinIO (Object Storage S3-compatível)
+    implementation("io.minio:minio:8.5.7")
+
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
