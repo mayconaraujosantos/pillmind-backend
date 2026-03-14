@@ -15,13 +15,13 @@ import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
  * Testes para AccountPostgresRepository
  * Nota: Estes testes requerem um banco de dados PostgreSQL em execução
  */
-public class AccountPostgresRepositoryTest {
+class AccountPostgresRepositoryTest {
   private Connection connection;
   private AddAccountRepository addAccountRepository;
   private LoadAccountByEmailRepository loadAccountByEmailRepository;
 
   @BeforeEach
-  public void setUp() throws SQLException {
+  void setUp() throws SQLException {
     // TODO: Configurar conexão de teste com banco em memória ou container
     // Por enquanto, este teste será um placeholder
     // connection = DatabaseConfig.getConnection();
@@ -30,19 +30,19 @@ public class AccountPostgresRepositoryTest {
   }
 
   @Test
-  public void shouldAddAccountToDatabase() {
+  void shouldAddAccountToDatabase() {
     // TODO: Implementar quando o repositório estiver pronto
     assertTrue(true);
   }
 
   @Test
-  public void shouldLoadAccountByEmail() {
+  void shouldLoadAccountByEmail() {
     // TODO: Implementar quando o repositório estiver pronto
     assertTrue(true);
   }
 
   @Test
-  public void shouldReturnEmptyWhenEmailNotFound() {
+  void shouldReturnEmptyWhenEmailNotFound() {
     // TODO: Implementar quando o repositório estiver pronto
     assertTrue(true);
   }

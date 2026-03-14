@@ -1,21 +1,22 @@
 package com.pillmind.infra.validators;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testes para EmailValidator
  */
-public class EmailValidatorTest {
+class EmailValidatorTest {
     @Test
-    public void testValidEmails() {
+    void testValidEmails() {
         assertTrue(EmailValidator.isValid("test@example.com"));
         assertTrue(EmailValidator.isValid("user.name@domain.co.uk"));
     }
 
     @Test
-    public void testInvalidEmails() {
+    void testInvalidEmails() {
         assertFalse(EmailValidator.isValid("invalid"));
         assertFalse(EmailValidator.isValid("@example.com"));
         assertFalse(EmailValidator.isValid("test@"));

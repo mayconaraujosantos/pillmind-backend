@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
  */
 class AccountTest {
   @Test
-  public void shouldCreateAccountWithValidData() {
+  void shouldCreateAccountWithValidData() {
     var account = new Account(
         "account-id-123",
         "John Doe",
@@ -31,7 +31,7 @@ class AccountTest {
   }
 
   @Test
-  public void shouldCreateGoogleAccount() {
+  void shouldCreateGoogleAccount() {
     var account = new Account(
         "account-id-456",
         "Jane Doe",
@@ -46,7 +46,7 @@ class AccountTest {
   }
 
   @Test
-  public void shouldImplementEntityInterface() {
+  void shouldImplementEntityInterface() {
     var account = new Account(
         "account-id-789",
         "Test User",
@@ -59,7 +59,7 @@ class AccountTest {
   }
 
   @Test
-  public void shouldDetectOAuth2Accounts() {
+  void shouldDetectOAuth2Accounts() {
     var localAccount = new Account(
         "account-local",
         "Local User",
@@ -82,7 +82,7 @@ class AccountTest {
   }
 
   @Test
-  public void shouldUpdateEmailVerificationStatus() {
+    void shouldUpdateEmailVerificationStatus() {
     var account = new Account(
         "account-id",
         "User Name",
@@ -100,7 +100,7 @@ class AccountTest {
   }
 
   @Test
-  public void shouldUpdateAuthProvider() {
+  void shouldUpdateAuthProvider() {
     var account = new Account(
         "account-id",
         "User Name",

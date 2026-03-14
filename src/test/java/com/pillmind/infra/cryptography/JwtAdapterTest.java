@@ -1,15 +1,16 @@
 package com.pillmind.infra.cryptography;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testes para JwtAdapter
  */
-public class JwtAdapterTest {
+class JwtAdapterTest {
     @Test
-    public void testEncryptAndDecrypt() {
+    void testEncryptAndDecrypt() {
         var secret = "test-secret-key-min-256-bits-for-hmac-sha-256-algorithm";
         var adapter = new JwtAdapter(secret, 3600000);
         var subject = "user123";

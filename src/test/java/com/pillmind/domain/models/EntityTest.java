@@ -1,15 +1,15 @@
 package com.pillmind.domain.models;
 
-import org.junit.jupiter.api.Test;
-
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * Testes base para entidades
  */
-public class EntityTest {
+class EntityTest {
     @Test
-    public void testEntityInterface() {
+    void testEntityInterface() {
         // Placeholder para testes de entidades
         assertNotNull(Entity.class);
     }

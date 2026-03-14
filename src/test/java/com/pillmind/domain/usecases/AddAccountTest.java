@@ -22,9 +22,9 @@ import com.pillmind.domain.models.Account;
 /**
  * Testes para o caso de uso AddAccount
  */
-public class AddAccountTest {
+class AddAccountTest {
     @Test
-    public void shouldCallHasherWithCorrectPassword() {
+    void shouldCallHasherWithCorrectPassword() {
         var hasher = mock(Hasher.class);
         var addAccountRepository = mock(AddAccountRepository.class);
         var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
@@ -44,7 +44,7 @@ public class AddAccountTest {
     }
 
     @Test
-    public void shouldThrowIfEmailAlreadyExists() {
+    void shouldThrowIfEmailAlreadyExists() {
         var hasher = mock(Hasher.class);
         var addAccountRepository = mock(AddAccountRepository.class);
         var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
@@ -60,7 +60,7 @@ public class AddAccountTest {
     }
 
     @Test
-    public void shouldReturnAccountOnSuccess() {
+    void shouldReturnAccountOnSuccess() {
         var hasher = mock(Hasher.class);
         var addAccountRepository = mock(AddAccountRepository.class);
         var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);

@@ -1,17 +1,21 @@
 package com.pillmind.domain.models;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testes para a entidade SocialAccount
  */
 @DisplayName("SocialAccount Tests")
-public class SocialAccountTest {
+class SocialAccountTest {
 
     @Test
     @DisplayName("Deve criar conta social com dados válidos")

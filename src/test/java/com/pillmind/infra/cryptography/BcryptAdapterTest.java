@@ -1,15 +1,18 @@
 package com.pillmind.infra.cryptography;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
  * Testes para BcryptAdapter
  */
-public class BcryptAdapterTest {
+class BcryptAdapterTest {
     @Test
-    public void testHashAndCompare() {
+    void testHashAndCompare() {
         var adapter = new BcryptAdapter(12);
         var plaintext = "password123";
         

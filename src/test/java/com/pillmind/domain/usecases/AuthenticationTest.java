@@ -1,23 +1,30 @@
 package com.pillmind.domain.usecases;
 
-import com.pillmind.data.protocols.cryptography.HashComparer;
-import com.pillmind.data.protocols.cryptography.Encrypter;
-import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
-import com.pillmind.data.usecases.DbAuthentication;
-import com.pillmind.domain.models.Account;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
+
+import com.pillmind.data.protocols.cryptography.Encrypter;
+import com.pillmind.data.protocols.cryptography.HashComparer;
+import com.pillmind.data.protocols.db.LoadAccountByEmailRepository;
+import com.pillmind.data.usecases.DbAuthentication;
+import com.pillmind.domain.models.Account;
 
 /**
  * Testes para o caso de uso Authentication
  */
-public class AuthenticationTest {
+class AuthenticationTest {
   @Test
-  public void shouldReturnAuthenticationResultWithAccessToken() {
+  void shouldReturnAuthenticationResultWithAccessToken() {
     var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
     var hashComparer = mock(HashComparer.class);
     var encrypter = mock(Encrypter.class);
@@ -42,7 +49,7 @@ public class AuthenticationTest {
   }
 
   @Test
-  public void shouldThrowIfEmailNotFound() {
+  void shouldThrowIfEmailNotFound() {
     var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
     var hashComparer = mock(HashComparer.class);
     var encrypter = mock(Encrypter.class);
@@ -58,7 +65,7 @@ public class AuthenticationTest {
   }
 
   @Test
-  public void shouldThrowIfPasswordIsInvalid() {
+  void shouldThrowIfPasswordIsInvalid() {
     var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
     var hashComparer = mock(HashComparer.class);
     var encrypter = mock(Encrypter.class);
@@ -77,7 +84,7 @@ public class AuthenticationTest {
   }
 
   @Test
-  public void shouldThrowIfAccountIsGoogleAccount() {
+  void shouldThrowIfAccountIsGoogleAccount() {
     var loadAccountByEmailRepository = mock(LoadAccountByEmailRepository.class);
     var hashComparer = mock(HashComparer.class);
     var encrypter = mock(Encrypter.class);

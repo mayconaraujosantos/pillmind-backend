@@ -27,7 +27,7 @@ import io.javalin.testtools.JavalinTest;
 /**
  * Testes para SignInController - Nova estrutura
  */
-public class SignInControllerTest {
+class SignInControllerTest {
 
   private User makeUser() {
     return new User("user-id", "John Doe", "john@example.com", LocalDate.of(1990, 5, 15), Gender.MALE, null, true, 
@@ -35,7 +35,7 @@ public class SignInControllerTest {
   }
 
   @Test
-  public void shouldReturn200WithAccessTokenOnSuccess() {
+  void shouldReturn200WithAccessTokenOnSuccess() {
     var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
@@ -61,7 +61,7 @@ public class SignInControllerTest {
   }
 
   @Test
-  public void shouldReturn401WhenCredentialsAreInvalid() {
+  void shouldReturn401WhenCredentialsAreInvalid() {
     var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
@@ -85,7 +85,7 @@ public class SignInControllerTest {
   }
 
   @Test
-  public void shouldReturn400WhenRequestIsInvalid() {
+  void shouldReturn400WhenRequestIsInvalid() {
     var localAuthentication = mock(LocalAuthentication.class);
     var validator = mock(SignInValidation.class);
 
