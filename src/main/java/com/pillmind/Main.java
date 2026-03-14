@@ -13,6 +13,8 @@ import com.pillmind.main.routes.HealthRoutes;
 import com.pillmind.main.routes.SwaggerRoutes;
 import com.pillmind.presentation.handlers.ErrorHandlers;
 
+import io.javalin.http.staticfiles.Location;
+
 import io.javalin.Javalin;
 import io.javalin.plugin.bundled.CorsPluginConfig;
 
@@ -28,7 +30,7 @@ public class Main {
       logger.info("=== Iniciando PillMind Backend ===");
       logger.info("Ambiente: {}", Env.APP_ENV);
       logger.info("Porta: {}", Env.PORT);
-      logger.info("Database: {}", Env.DATABASE_URL);
+      logger.info("Database: {}", Env.DATABASE_URL_SAFE);
 
       // Executa migrations do banco de dados
       logger.info("Executando migrations do Flyway...");
@@ -43,12 +45,18 @@ public class Main {
       logger.info("Bootstrap concluído!");
 
       var app = Javalin
-        .create(config -> {
-          config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
-          // Registra plugins do Swagger/OpenAPI
-          config.registerPlugin(SwaggerConfig.createOpenApiPlugin());
-          config.registerPlugin(SwaggerConfig.createSwaggerPlugin());
-        });
+          .create(config -> {
+            config.bundledPlugins.enableCors(cors -> cors.addRule(CorsPluginConfig.CorsRule::anyHost));
+            // Registra plugins do Swagger/OpenAPI
+            config.registerPlugin(SwaggerConfig.createOpenApiPlugin());
+            config.registerPlugin(SwaggerConfig.createSwaggerPlugin());
+            // Servir arquivos estáticos do diretório uploads
+            config.staticFiles.add(staticFiles -> {
+              staticFiles.hostedPath = "/uploads";
+              staticFiles.directory = "uploads";
+              staticFiles.location = Location.EXTERNAL;
+            });
+          });
 
       // Configurar handlers de erro globais
       ErrorHandlers.configure(app);
