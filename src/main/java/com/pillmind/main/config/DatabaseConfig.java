@@ -9,12 +9,14 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 /**
- * Configuração do banco de dados PostgreSQL
+ * Configuração do pool JDBC (SQLite ou outro driver via {@code DATABASE_URL}).
  */
 public class DatabaseConfig {
   private DatabaseConfig() {
     // Utility class
   }
+
+  private static final String SQLITE_PRAGMAS = "PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL;";
 
   private static HikariDataSource dataSource;
 
@@ -23,8 +25,15 @@ public class DatabaseConfig {
     config.setJdbcUrl(Env.DATABASE_URL);
     config.setUsername(Env.DATABASE_USER);
     config.setPassword(Env.DATABASE_PASSWORD);
-    config.setMaximumPoolSize(10);
-    config.setMinimumIdle(5);
+    if (Env.isSqlite()) {
+      config.setConnectionInitSql(SQLITE_PRAGMAS);
+      // SQLite: um writer por vez; várias conexões aumentam "database is locked"
+      config.setMaximumPoolSize(1);
+      config.setMinimumIdle(1);
+    } else {
+      config.setMaximumPoolSize(10);
+      config.setMinimumIdle(5);
+    }
     config.setConnectionTimeout(30000);
     config.setIdleTimeout(600000);
     config.setMaxLifetime(1800000);

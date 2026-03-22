@@ -48,4 +48,8 @@ public class HttpHelper {
     public static void serverError(Context ctx, String message) {
         ctx.status(500).json(Map.of(ERROR_KEY, message));
     }
+
+    public static void serviceUnavailable(Context ctx, String message) {
+        ctx.status(503).json(Map.of(ERROR_KEY, message));
+    }
 }

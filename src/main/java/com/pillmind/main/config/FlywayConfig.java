@@ -43,13 +43,15 @@ public class FlywayConfig {
     }
 
     private static Flyway buildFlyway() {
-        return Flyway.configure()
-                .dataSource(
-                        Env.DATABASE_URL,
-                        Env.DATABASE_USER,
-                        Env.DATABASE_PASSWORD)
+        // Usa o mesmo DataSource do Hikari para o Flyway não depender de DriverDataSource +
+        // Class.forName(org.sqlite.JDBC) (que falha se o IDE/run não tiver o sqlite-jdbc no classpath).
+        var config = Flyway.configure()
+                .dataSource(DatabaseConfig.getDataSource())
                 .locations("classpath:db/migration")
-                .baselineOnMigrate(true)
-                .load();
+                .baselineOnMigrate(true);
+        if (Env.isSqlite()) {
+            config.initSql("PRAGMA foreign_keys = ON");
+        }
+        return config.load();
     }
 }

@@ -14,6 +14,8 @@ import com.pillmind.presentation.controllers.ProfileController;
 import com.pillmind.presentation.controllers.SignInController;
 import com.pillmind.presentation.controllers.SignUpController;
 import com.pillmind.presentation.controllers.UpdateProfileController;
+import com.pillmind.presentation.controllers.DeleteProfilePictureController;
+import com.pillmind.presentation.controllers.UploadProfilePictureController;
 import com.pillmind.presentation.helpers.LogSanitizer;
 import com.pillmind.presentation.protocols.Validation;
 
@@ -33,6 +35,7 @@ public class AuthRoutes implements Routes {
   private final LoadUserById loadUserById;
   private final UpdateUserProfile updateUserProfile;
   private final Decrypter decrypter;
+  private final UploadProfilePictureController uploadProfilePictureController;
 
   // Constructor com injeção de dependências
   public AuthRoutes(
@@ -43,7 +46,8 @@ public class AuthRoutes implements Routes {
       GoogleAuthController googleAuthController,
       LoadUserById loadUserById,
       UpdateUserProfile updateUserProfile,
-      Decrypter decrypter) {
+      Decrypter decrypter,
+      UploadProfilePictureController uploadProfilePictureController) {
     this.createLocalAccount = createLocalAccount;
     this.localAuthentication = localAuthentication;
     this.signUpValidation = signUpValidation;
@@ -52,6 +56,7 @@ public class AuthRoutes implements Routes {
     this.loadUserById = loadUserById;
     this.updateUserProfile = updateUserProfile;
     this.decrypter = decrypter;
+    this.uploadProfilePictureController = uploadProfilePictureController;
   }
 
   @Override
@@ -60,6 +65,15 @@ public class AuthRoutes implements Routes {
     var signInController = new SignInController(localAuthentication, signInValidation);
     var profileController = new ProfileController(loadUserById, decrypter);
     var updateProfileController = new UpdateProfileController(updateUserProfile, loadUserById, decrypter);
+    var deleteProfilePictureController = new DeleteProfilePictureController(
+        updateUserProfile, loadUserById, decrypter);
+
+    // Route: POST /api/profile/picture (multipart)
+    app.post("/api/profile/picture", ctx -> {
+      logger.info("→ POST /api/profile/picture - Upload profile image");
+      uploadProfilePictureController.handle(ctx);
+      logger.info("✓ Profile picture uploaded");
+    });
 
     // Route: POST /api/signup
     app.post("/api/signup", ctx -> {
@@ -93,6 +107,13 @@ public class AuthRoutes implements Routes {
       logger.info("→ PUT /api/profile - Update user profile");
       updateProfileController.handle(ctx);
       logger.info("✓ Profile updated successfully");
+    });
+
+    // Route: DELETE /api/profile/picture
+    app.delete("/api/profile/picture", ctx -> {
+      logger.info("→ DELETE /api/profile/picture - Clear profile image URL");
+      deleteProfilePictureController.handle(ctx);
+      logger.info("✓ Profile picture cleared");
     });
   }
 }

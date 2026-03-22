@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import com.pillmind.domain.errors.ConflictException;
 import com.pillmind.domain.errors.NotFoundException;
+import com.pillmind.domain.errors.ServiceUnavailableException;
 import com.pillmind.domain.errors.UnauthorizedException;
 import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.presentation.helpers.HttpHelper;
@@ -39,6 +40,11 @@ public final class ErrorHandlers {
         app.exception(NotFoundException.class, (e, ctx) -> {
             logger.debug("Not found: {}", e.getMessage());
             HttpHelper.notFound(ctx, e.getMessage());
+        });
+
+        app.exception(ServiceUnavailableException.class, (e, ctx) -> {
+            logger.warn("Service unavailable: {}", e.getMessage());
+            HttpHelper.serviceUnavailable(ctx, e.getMessage());
         });
 
         app.exception(Exception.class, (e, ctx) -> {

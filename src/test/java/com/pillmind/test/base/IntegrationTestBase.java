@@ -14,7 +14,7 @@ import com.pillmind.test.config.TestDatabaseConfig;
 
 /**
  * Classe base para testes de integração
- * Fornece setup e teardown do banco H2
+ * Fornece setup e teardown do banco SQLite (memória compartilhada)
  */
 public abstract class IntegrationTestBase {
     protected static Container container;
@@ -22,13 +22,12 @@ public abstract class IntegrationTestBase {
 
     @BeforeAll
     static void setUpDatabase() throws SQLException {
-        // Inicializa banco H2
         connection = TestDatabaseConfig.initializeDatabase();
 
-        // Bootstrap da aplicação com banco de teste (H2)
+        // Bootstrap com a mesma conexão SQLite de teste
         try {
             ApplicationBootstrap bootstrap = new ApplicationBootstrap();
-            bootstrap.bootstrap(connection); // Passa a conexão do H2
+            bootstrap.bootstrap(connection);
             container = bootstrap.getContainer();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao inicializar bootstrap", e);

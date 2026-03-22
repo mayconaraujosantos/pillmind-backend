@@ -38,8 +38,8 @@ public class UserPostgresRepository extends PostgresRepository implements UserRe
             stmt.setString(5, user.gender() != null ? user.gender().name() : null);
             stmt.setString(6, user.pictureUrl());
             stmt.setBoolean(7, user.emailVerified());
-            stmt.setObject(8, user.createdAt());
-            stmt.setObject(9, user.updatedAt());
+            setTimestamp(stmt, 8, user.createdAt());
+            setTimestamp(stmt, 9, user.updatedAt());
 
             stmt.executeUpdate();
             logger.debug("✓ User created with id: {}", user.id());
@@ -61,7 +61,8 @@ public class UserPostgresRepository extends PostgresRepository implements UserRe
             stmt.setString(4, user.gender() != null ? user.gender().name() : null);
             stmt.setString(5, user.pictureUrl());
             stmt.setBoolean(6, user.emailVerified());
-            stmt.setObject(7, user.updatedAt());
+            setTimestamp(stmt, 7, user.updatedAt());
+
             stmt.setString(8, user.id());
 
             int rowsAffected = stmt.executeUpdate();

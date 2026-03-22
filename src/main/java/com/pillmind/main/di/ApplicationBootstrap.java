@@ -20,13 +20,16 @@ import com.pillmind.infra.cryptography.JwtAdapter;
 import com.pillmind.infra.db.postgres.LocalAccountPostgresRepository;
 import com.pillmind.infra.db.postgres.OAuthAccountPostgresRepository;
 import com.pillmind.infra.db.postgres.UserPostgresRepository;
+import com.pillmind.data.protocols.storage.ObjectStorageService;
 import com.pillmind.infra.oauth.GoogleTokenValidator;
+import com.pillmind.infra.storage.minio.MinioObjectStorageService;
 import com.pillmind.main.config.DatabaseConfig;
 import com.pillmind.main.config.Env;
 import com.pillmind.main.routes.AuthRoutes;
 import com.pillmind.main.routes.HealthRoutes;
 import com.pillmind.main.routes.SwaggerRoutes;
 import com.pillmind.presentation.controllers.GoogleAuthController;
+import com.pillmind.presentation.controllers.UploadProfilePictureController;
 import com.pillmind.presentation.validators.SignInValidation;
 import com.pillmind.presentation.validators.SignUpValidation;
 
@@ -115,6 +118,9 @@ public class ApplicationBootstrap {
         // OAuth2
         container.registerSingleton("oauth.google-validator",
                 new GoogleTokenValidator(Env.GOOGLE_CLIENT_ID));
+
+        // Object storage (MinIO)
+        container.registerSingleton("storage.object", new MinioObjectStorageService());
     }
 
     /**
@@ -192,6 +198,12 @@ public class ApplicationBootstrap {
             var decrypter = container.resolve("crypto.jwt", JwtAdapter.class);
             var encrypter = container.resolve("crypto.jwt", JwtAdapter.class);
             var googleAuthController = new GoogleAuthController(linkOAuthAccount, encrypter, googleTokenValidator);
+            var objectStorage = container.resolve("storage.object", ObjectStorageService.class);
+            var uploadProfilePictureController = new UploadProfilePictureController(
+                    objectStorage,
+                    updateUserProfile,
+                    loadUserById,
+                    decrypter);
 
             return new AuthRoutes(
                     createLocalAccount,
@@ -201,7 +213,8 @@ public class ApplicationBootstrap {
                     googleAuthController,
                     loadUserById,
                     updateUserProfile,
-                    decrypter);
+                    decrypter,
+                    uploadProfilePictureController);
         });
     }
 

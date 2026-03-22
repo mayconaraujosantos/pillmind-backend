@@ -9,50 +9,48 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Configuração do banco H2 em memória para testes
- * H2 oferece performance excelente e é compatível com PostgreSQL
+ * SQLite em memória compartilhada para testes (mesmo stack que produção dev).
  */
 public class TestDatabaseConfig {
     private static final Logger logger = LoggerFactory.getLogger(TestDatabaseConfig.class);
 
-    private static final String H2_URL = "jdbc:h2:mem:pillmind_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE";
-    private static final String H2_USER = "sa";
-    private static final String H2_PASSWORD = "";
+    /**
+     * {@code cache=shared} permite Flyway e o código de teste usarem o mesmo DB em memória.
+     */
+    private static final String SQLITE_URL = "jdbc:sqlite:file:pillmind_test?mode=memory&cache=shared";
 
     private static Connection connection;
 
     /**
-     * Inicializa o banco H2 com migrations
+     * Inicializa o SQLite com migrations Flyway.
      */
     public static Connection initializeDatabase() throws SQLException {
-        logger.info("Inicializando banco H2 em memória...");
+        logger.info("Inicializando SQLite em memória para testes...");
 
-        // Carrega o driver H2 explicitamente
         try {
-            Class.forName("org.h2.Driver");
-            logger.debug("Driver H2 carregado");
+            Class.forName("org.sqlite.JDBC");
+            logger.debug("Driver SQLite carregado");
         } catch (ClassNotFoundException e) {
-            throw new SQLException("Driver H2 não encontrado no classpath", e);
+            throw new SQLException("Driver SQLite não encontrado no classpath", e);
         }
 
-        // Cria conexão
-        connection = DriverManager.getConnection(H2_URL, H2_USER, H2_PASSWORD);
-        logger.info("✓ Banco H2 conectado");
+        connection = DriverManager.getConnection(SQLITE_URL);
+        try (var st = connection.createStatement()) {
+            st.execute("PRAGMA foreign_keys = ON");
+        }
+        logger.info("✓ SQLite de teste conectado");
 
-        // Executa migrations
         runMigrations();
 
         return connection;
     }
 
-    /**
-     * Executa migrations Flyway
-     */
     private static void runMigrations() {
         logger.info("Executando migrations Flyway...");
 
         Flyway flyway = Flyway.configure()
-                .dataSource(H2_URL, H2_USER, H2_PASSWORD)
+                .dataSource(SQLITE_URL, "", "")
+                .initSql("PRAGMA foreign_keys = ON")
                 .locations("classpath:db/migration")
                 .baselineOnMigrate(true)
                 .load();
@@ -61,9 +59,6 @@ public class TestDatabaseConfig {
         logger.info("✓ Migrations concluídas");
     }
 
-    /**
-     * Obtém a conexão existente
-     */
     public static Connection getConnection() {
         if (connection == null) {
             throw new IllegalStateException(
@@ -72,9 +67,6 @@ public class TestDatabaseConfig {
         return connection;
     }
 
-    /**
-     * Limpa dados de uma tabela
-     */
     public static void cleanTable(String tableName) throws SQLException {
         try (var stmt = connection.createStatement()) {
             stmt.execute("DELETE FROM " + tableName);
@@ -82,24 +74,17 @@ public class TestDatabaseConfig {
         }
     }
 
-    /**
-     * Limpa todos os dados das tabelas - Nova estrutura
-     */
     public static void cleanAllTables() throws SQLException {
         logger.debug("Limpando todas as tabelas...");
-        // Ordem de limpeza para respeitar foreign keys
         cleanTable("oauth_accounts");
         cleanTable("local_accounts");
         cleanTable("users");
     }
 
-    /**
-     * Fecha a conexão
-     */
     public static void closeDatabase() throws SQLException {
         if (connection != null && !connection.isClosed()) {
             connection.close();
-            logger.info("Banco H2 fechado");
+            logger.info("SQLite de teste fechado");
         }
     }
 }

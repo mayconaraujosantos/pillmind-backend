@@ -32,9 +32,9 @@ public class LocalAccountPostgresRepository extends PostgresRepository implement
             stmt.setString(2, localAccount.userId());
             stmt.setString(3, localAccount.email());
             stmt.setString(4, localAccount.passwordHash());
-            stmt.setObject(5, localAccount.lastLoginAt());
-            stmt.setObject(6, localAccount.createdAt());
-            stmt.setObject(7, localAccount.updatedAt());
+            setTimestamp(stmt, 5, localAccount.lastLoginAt());
+            setTimestamp(stmt, 6, localAccount.createdAt());
+            setTimestamp(stmt, 7, localAccount.updatedAt());
 
             stmt.executeUpdate();
             logger.debug("✓ LocalAccount created with id: {}", localAccount.id());
@@ -52,8 +52,8 @@ public class LocalAccountPostgresRepository extends PostgresRepository implement
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, localAccount.email());
             stmt.setString(2, localAccount.passwordHash());
-            stmt.setObject(3, localAccount.lastLoginAt());
-            stmt.setObject(4, localAccount.updatedAt());
+            setTimestamp(stmt, 3, localAccount.lastLoginAt());
+            setTimestamp(stmt, 4, localAccount.updatedAt());
             stmt.setString(5, localAccount.id());
 
             int rowsAffected = stmt.executeUpdate();

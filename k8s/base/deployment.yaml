@@ -6,7 +6,8 @@ metadata:
   labels:
     app: pillmind-backend
 spec:
-  replicas: 2
+  # SQLite: um único processo deve escrever no mesmo arquivo
+  replicas: 1
   selector:
     matchLabels:
       app: pillmind-backend
@@ -15,10 +16,16 @@ spec:
       labels:
         app: pillmind-backend
     spec:
+      volumes:
+        - name: sqlite-data
+          emptyDir: {}
       containers:
         - name: backend
           image: pillmind-backend:latest
           imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - name: sqlite-data
+              mountPath: /data
           ports:
             - containerPort: 8080
               name: http

@@ -38,7 +38,7 @@ dependencies {
     annotationProcessor("io.javalin.community.openapi:openapi-annotation-processor:6.0.0")
 
     // Database
-    implementation("org.postgresql:postgresql:42.6.0")
+    implementation("org.xerial:sqlite-jdbc:3.47.1.0")
     implementation("org.hibernate.orm:hibernate-core:6.3.1.Final")
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:9.22.0")
@@ -69,14 +69,14 @@ dependencies {
     // Caching (opcional)
     implementation("redis.clients:jedis:4.4.3")
 
+    // Object storage (MinIO — API compatível com S3)
+    implementation("io.minio:minio:8.5.17")
+
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation("io.javalin:javalin-testtools:6.0.0")
     testImplementation("org.mockito:mockito-core:5.5.0")
-    
-    // H2 para testes em memória (rápido e leve)
-    testImplementation("com.h2database:h2:2.2.224")
     
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 

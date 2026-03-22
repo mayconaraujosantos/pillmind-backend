@@ -60,7 +60,7 @@ public class SignUpController implements Controller {
   }
 
   private SignUpResponse getResponse(Result result) {
-    var response = new SignUpResponse(
+    return new SignUpResponse(
         result.user().id(),
         result.user().name(),
         result.user().email(),
@@ -68,7 +68,6 @@ public class SignUpController implements Controller {
         result.user().gender() != null ? result.user().gender().name() : null,
         result.user().pictureUrl(),
         result.user().emailVerified());
-    return response;
   }
 
   private Params getParams(SignUpRequest request) {

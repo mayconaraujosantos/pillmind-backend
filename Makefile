@@ -2,6 +2,13 @@
 
 SHELL := /bin/bash
 
+# Gradle wrapper: Windows Make often uses cmd.exe, which does not support ./gradlew
+ifeq ($(OS),Windows_NT)
+GRADLEW := gradlew.bat
+else
+GRADLEW := ./gradlew
+endif
+
 # Variables
 APP_NAME := pillmind-backend
 NAMESPACE := pillmind-dev
@@ -43,47 +50,47 @@ help:
 
 .PHONY: build
 build:
-	./gradlew build
+	$(GRADLEW) build
 
 .PHONY: test
 test:
-	./gradlew test
+	$(GRADLEW) test
 
 .PHONY: test-one
 test-one:
 	@if [ -z "$(TEST)" ]; then echo "Usage: make test-one TEST=SignUpControllerIntegrationTest.shouldCreateUserAndPersistToDatabase"; exit 1; fi
-	./gradlew test --tests "*$(TEST)"
+	$(GRADLEW) test --tests "*$(TEST)"
 
 .PHONY: run
 run:
-	./gradlew run
+	$(GRADLEW) run
 
 .PHONY: start
 start: run
 
 .PHONY: clean
 clean:
-	./gradlew clean
+	$(GRADLEW) clean
 
 .PHONY: flyway-migrate
 flyway-migrate:
-	./gradlew flywayMigrate
+	$(GRADLEW) flywayMigrate
 
 .PHONY: flyway-clean
 flyway-clean:
-	./gradlew flywayClean
+	$(GRADLEW) flywayClean
 
 .PHONY: flyway-info
 flyway-info:
-	./gradlew flywayInfo
+	$(GRADLEW) flywayInfo
 
 .PHONY: flyway-validate
 flyway-validate:
-	./gradlew flywayValidate
+	$(GRADLEW) flywayValidate
 
 .PHONY: flyway-repair
 flyway-repair:
-	./gradlew flywayRepair
+	$(GRADLEW) flywayRepair
 
 .PHONY: docker-build
 docker-build:
@@ -116,7 +123,7 @@ curl-swagger:
 .PHONY: hash
 hash:
 	@if [ -z "$(PASSWORD)" ]; then echo "Usage: make hash PASSWORD=yourPass"; exit 1; fi
-	./gradlew generateHash -Ppassword="$(PASSWORD)"
+	$(GRADLEW) generateHash -Ppassword="$(PASSWORD)"
 
 .PHONY: redeploy
 redeploy: docker-build kind-load k8s-delete-pods

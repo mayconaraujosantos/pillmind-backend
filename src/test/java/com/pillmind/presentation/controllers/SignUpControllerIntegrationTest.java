@@ -15,13 +15,13 @@ import io.javalin.testtools.JavalinTest;
 
 /**
  * Testes de integração para SignUpController
- * Usa H2 em memória para performance rápida
+ * Usa SQLite em memória (alinhado ao backend)
  */
 @DisplayName("SignUpController Integration Tests")
 class SignUpControllerIntegrationTest extends IntegrationTestBase {
 
     @Test
-    @DisplayName("Deve criar usuário com sucesso e persistir no banco H2")
+    @DisplayName("Deve criar usuário com sucesso e persistir no banco")
     void shouldCreateUserAndPersistToDatabase() throws Exception {
         JavalinTest.test((app, client) -> {
             setupRoutes(app);

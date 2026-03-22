@@ -38,11 +38,11 @@ public class AccountPostgresRepository extends PostgresRepository
       stmt.setBoolean(5, account.googleAccount());
       stmt.setString(6, account.googleId());
       stmt.setString(7, account.pictureUrl());
-      stmt.setObject(8, account.lastLoginAt());
+      setTimestamp(stmt, 8, account.lastLoginAt());
       stmt.setString(9, account.authProvider().getValue());
       stmt.setBoolean(10, account.emailVerified());
-      stmt.setObject(11, account.createdAt());
-      stmt.setObject(12, account.updatedAt());
+      setTimestamp(stmt, 11, account.createdAt());
+      setTimestamp(stmt, 12, account.updatedAt());
 
       stmt.executeUpdate();
       return account;
@@ -124,10 +124,10 @@ public class AccountPostgresRepository extends PostgresRepository
       stmt.setString(1, account.name());
       stmt.setString(2, account.googleId());
       stmt.setString(3, account.pictureUrl());
-      stmt.setObject(4, account.lastLoginAt());
+      setTimestamp(stmt, 4, account.lastLoginAt());
       stmt.setString(5, account.authProvider().getValue());
       stmt.setBoolean(6, account.emailVerified());
-      stmt.setObject(7, account.updatedAt());
+      setTimestamp(stmt, 7, account.updatedAt());
       stmt.setString(8, account.id());
 
       stmt.executeUpdate();

@@ -47,8 +47,8 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
             stmt.setString(7, socialAccount.profileImageUrl());
             stmt.setString(8, socialAccount.accessToken());
             stmt.setString(9, socialAccount.refreshToken());
-            stmt.setObject(10, socialAccount.tokenExpiry());
-            stmt.setObject(11, socialAccount.linkedAt());
+            setTimestamp(stmt, 10, socialAccount.tokenExpiry());
+            setTimestamp(stmt, 11, socialAccount.linkedAt());
             stmt.setBoolean(12, socialAccount.isPrimary());
 
             stmt.executeUpdate();
@@ -70,7 +70,7 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
             UPDATE social_accounts 
             SET email = ?, name = ?, profile_image_url = ?, access_token = ?, 
                 refresh_token = ?, token_expiry = ?, is_primary = ?
-            WHERE id = ?::uuid
+            WHERE id = ?
             """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -79,7 +79,7 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
             stmt.setString(3, socialAccount.profileImageUrl());
             stmt.setString(4, socialAccount.accessToken());
             stmt.setString(5, socialAccount.refreshToken());
-            stmt.setObject(6, socialAccount.tokenExpiry());
+            setTimestamp(stmt, 6, socialAccount.tokenExpiry());
             stmt.setBoolean(7, socialAccount.isPrimary());
             stmt.setString(8, socialAccount.id());
 
@@ -101,7 +101,7 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
             SELECT id, user_id, provider, provider_user_id, email, name, 
                    profile_image_url, access_token, refresh_token, token_expiry, 
                    linked_at, is_primary
-            FROM social_accounts WHERE id = ?::uuid
+            FROM social_accounts WHERE id = ?
             """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -203,7 +203,7 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
             SELECT id, user_id, provider, provider_user_id, email, name, 
                    profile_image_url, access_token, refresh_token, token_expiry, 
                    linked_at, is_primary
-            FROM social_accounts WHERE user_id = ? AND is_primary = true
+            FROM social_accounts WHERE user_id = ? AND is_primary = 1
             """;
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -223,9 +223,9 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
 
     @Override
     public void setPrimary(String socialAccountId) {
-        String getUserIdSql = "SELECT user_id FROM social_accounts WHERE id = ?::uuid";
-        String clearPrimarySql = "UPDATE social_accounts SET is_primary = false WHERE user_id = ?";
-        String setPrimarySql = "UPDATE social_accounts SET is_primary = true WHERE id = ?::uuid";
+        String getUserIdSql = "SELECT user_id FROM social_accounts WHERE id = ?";
+        String clearPrimarySql = "UPDATE social_accounts SET is_primary = 0 WHERE user_id = ?";
+        String setPrimarySql = "UPDATE social_accounts SET is_primary = 1 WHERE id = ?";
 
         try {
             connection.setAutoCommit(false);
@@ -277,7 +277,7 @@ public class SocialAccountPostgresRepository extends PostgresRepository implemen
 
     @Override
     public void delete(String id) {
-        String sql = "DELETE FROM social_accounts WHERE id = ?::uuid";
+        String sql = "DELETE FROM social_accounts WHERE id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, id);

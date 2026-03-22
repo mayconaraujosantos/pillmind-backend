@@ -40,12 +40,12 @@ public class OAuthAccountPostgresRepository extends PostgresRepository implement
             stmt.setString(7, oauthAccount.profileImageUrl());
             stmt.setString(8, oauthAccount.accessToken());
             stmt.setString(9, oauthAccount.refreshToken());
-            stmt.setObject(10, oauthAccount.tokenExpiry());
-            stmt.setObject(11, oauthAccount.lastLoginAt());
-            stmt.setObject(12, oauthAccount.linkedAt());
+            setTimestamp(stmt, 10, oauthAccount.tokenExpiry());
+            setTimestamp(stmt, 11, oauthAccount.lastLoginAt());
+            setTimestamp(stmt, 12, oauthAccount.linkedAt());
             stmt.setBoolean(13, oauthAccount.isPrimary());
-            stmt.setObject(14, oauthAccount.createdAt());
-            stmt.setObject(15, oauthAccount.updatedAt());
+            setTimestamp(stmt, 14, oauthAccount.createdAt());
+            setTimestamp(stmt, 15, oauthAccount.updatedAt());
 
             stmt.executeUpdate();
             logger.debug("✓ OAuthAccount created with id: {} for provider: {}", oauthAccount.id(), oauthAccount.provider().getValue());
@@ -66,10 +66,10 @@ public class OAuthAccountPostgresRepository extends PostgresRepository implement
             stmt.setString(3, oauthAccount.profileImageUrl());
             stmt.setString(4, oauthAccount.accessToken());
             stmt.setString(5, oauthAccount.refreshToken());
-            stmt.setObject(6, oauthAccount.tokenExpiry());
-            stmt.setObject(7, oauthAccount.lastLoginAt());
+            setTimestamp(stmt, 6, oauthAccount.tokenExpiry());
+            setTimestamp(stmt, 7, oauthAccount.lastLoginAt());
             stmt.setBoolean(8, oauthAccount.isPrimary());
-            stmt.setObject(9, oauthAccount.updatedAt());
+            setTimestamp(stmt, 9, oauthAccount.updatedAt());
             stmt.setString(10, oauthAccount.id());
 
             int rowsAffected = stmt.executeUpdate();
@@ -151,7 +151,7 @@ public class OAuthAccountPostgresRepository extends PostgresRepository implement
     @Override
     public Optional<OAuthAccount> findPrimaryByUserId(String userId) {
         String sql = "SELECT id, user_id, provider, provider_user_id, email, provider_name, profile_image_url, access_token, refresh_token, token_expiry, last_login_at, linked_at, is_primary, created_at, updated_at " +
-                     "FROM oauth_accounts WHERE user_id = ? AND is_primary = true LIMIT 1";
+                     "FROM oauth_accounts WHERE user_id = ? AND is_primary = 1 LIMIT 1";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, userId);
@@ -192,7 +192,7 @@ public class OAuthAccountPostgresRepository extends PostgresRepository implement
 
     @Override
     public void clearPrimaryByUserId(String userId) {
-        String sql = "UPDATE oauth_accounts SET is_primary = false, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
+        String sql = "UPDATE oauth_accounts SET is_primary = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, userId);
