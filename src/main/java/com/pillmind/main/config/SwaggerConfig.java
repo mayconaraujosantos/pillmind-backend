@@ -1,5 +1,6 @@
 package com.pillmind.main.config;
 
+import io.javalin.openapi.BearerAuth;
 import io.javalin.openapi.plugin.OpenApiPlugin;
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin;
 
@@ -23,6 +24,7 @@ public class SwaggerConfig {
                         info.setVersion("1.0.0");
                         info.setDescription("API for PillMind - Medication Management System");
                     })
+                    .withSecurity(security -> security.withSecurityScheme("bearerAuth", new BearerAuth()))
                     .withServer(server -> {
                         server.setUrl("http://localhost:" + Env.PORT);
                         server.setDescription("Local Development");
@@ -40,7 +42,8 @@ public class SwaggerConfig {
      */
     public static SwaggerPlugin createSwaggerPlugin() {
         return new SwaggerPlugin(config -> {
-            config.setDocumentationPath("/openapi");
+            // Spec estático completo (inclui Medicines). /openapi continua só com rotas anotadas.
+            config.setDocumentationPath("/api/openapi.yaml");
         });
     }
 }

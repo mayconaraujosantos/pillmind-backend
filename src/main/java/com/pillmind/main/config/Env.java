@@ -82,7 +82,8 @@ public class Env {
 
   /**
    * URL pública usada no campo {@code picture_url} (app e navegador carregam a imagem daqui).
-   * Ex.: http://10.0.2.2:9000/pillmind (Android emulator → host) ou https://cdn.seudominio.com/pillmind
+   * Ex.: {@code http://192.168.x.x:8080/api/media} (proxy na API, sem abrir porta 9000),
+   * {@code http://10.0.2.2:9000/pillmind} (emulador → MinIO no host), ou CDN em produção.
    */
   public static final String MINIO_PUBLIC_BASE_URL = getEnvOrProperty(
     "MINIO_PUBLIC_BASE_URL",

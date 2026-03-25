@@ -2,6 +2,9 @@
 # Uso: docker compose -f docker-compose.minio.yml up -d
 # Console: http://localhost:9001 (minioadmin / minioadmin)
 # API:     http://localhost:9000
+#
+# Telemóvel na LAN: o Windows pode bloquear a porta 9000. O backend pode servir ficheiros em
+# GET /api/media/profiles/{userId}/{file} — nesse caso use MINIO_PUBLIC_BASE_URL=http://IP_LAN:8080/api/media
 
 services:
   minio:

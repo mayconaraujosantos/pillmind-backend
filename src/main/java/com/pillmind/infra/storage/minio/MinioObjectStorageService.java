@@ -1,6 +1,7 @@
 package com.pillmind.infra.storage.minio;
 
 import java.io.InputStream;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -11,10 +12,12 @@ import com.pillmind.domain.errors.ServiceUnavailableException;
 import com.pillmind.main.config.Env;
 
 import io.minio.BucketExistsArgs;
+import io.minio.GetObjectArgs;
 import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.SetBucketPolicyArgs;
+import io.minio.StatObjectArgs;
 
 /**
  * Cliente MinIO para uploads. Garante bucket e política de leitura pública no objeto.
@@ -50,6 +53,42 @@ public class MinioObjectStorageService implements ObjectStorageService {
   }
 
   @Override
+  public Optional<ObjectStorageService.StreamedObject> openPublicObject(String objectKey) {
+    if (!isConfigured()) {
+      return Optional.empty();
+    }
+    String key = objectKey == null ? "" : objectKey.strip();
+    if (!isAllowedPublicObjectKey(key)) {
+      return Optional.empty();
+    }
+    try {
+      ensureBucketAndPolicy();
+      var stat = client.statObject(
+          StatObjectArgs.builder().bucket(bucket).object(key).build());
+      var stream = client.getObject(
+          GetObjectArgs.builder().bucket(bucket).object(key).build());
+      String ct = stat.contentType();
+      if (ct == null || ct.isBlank()) {
+        ct = "application/octet-stream";
+      }
+      long len = stat.size();
+      return Optional.of(
+          new ObjectStorageService.StreamedObject(ct, stream, len >= 0 ? len : 0L));
+    } catch (Exception e) {
+      logger.debug("MinIO openPublicObject key={}: {}", key, e.getMessage());
+      return Optional.empty();
+    }
+  }
+
+  private static boolean isAllowedPublicObjectKey(String key) {
+    if (key.isEmpty() || key.contains("..")) {
+      return false;
+    }
+    return key.startsWith(ObjectStorageService.PROFILE_PREFIX)
+        || key.startsWith(ObjectStorageService.MEDICINE_PREFIX);
+  }
+
+  @Override
   public StoredObject putProfileImage(
       InputStream data,
       long sizeBytes,
@@ -76,6 +115,37 @@ public class MinioObjectStorageService implements ObjectStorageService {
     }
     String url = publicBaseUrl + "/" + objectKey;
     logger.info("Profile image stored: key={}", objectKey);
+    return new StoredObject(objectKey, url);
+  }
+
+  @Override
+  public StoredObject putMedicineImage(
+      InputStream data,
+      long sizeBytes,
+      String contentType,
+      String userId) {
+    if (!isConfigured()) {
+      throw new ServiceUnavailableException(
+          "Armazenamento de arquivos não está habilitado (MINIO_ENABLED=false ou não configurado).");
+    }
+    ensureBucketAndPolicy();
+    String ext = extensionForContentType(contentType);
+    String objectKey =
+        ObjectStorageService.MEDICINE_PREFIX + userId + "/" + UUID.randomUUID() + ext;
+    try {
+      client.putObject(
+          PutObjectArgs.builder()
+              .bucket(bucket)
+              .object(objectKey)
+              .stream(data, sizeBytes, -1)
+              .contentType(contentType)
+              .build());
+    } catch (Exception e) {
+      logger.error("MinIO putMedicineImage failed: {}", e.getMessage(), e);
+      throw new ServiceUnavailableException("Falha ao enviar imagem do medicamento.", e);
+    }
+    String url = publicBaseUrl + "/" + objectKey;
+    logger.info("Medicine image stored: key={}", objectKey);
     return new StoredObject(objectKey, url);
   }
 

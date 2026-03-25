@@ -76,6 +76,7 @@ public class TestDatabaseConfig {
 
     public static void cleanAllTables() throws SQLException {
         logger.debug("Limpando todas as tabelas...");
+        cleanTable("medicines");
         cleanTable("oauth_accounts");
         cleanTable("local_accounts");
         cleanTable("users");

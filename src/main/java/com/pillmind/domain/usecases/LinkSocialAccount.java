@@ -1,7 +1,5 @@
 package com.pillmind.domain.usecases;
 
-import com.pillmind.domain.models.SocialAccount;
-
 /**
  * Caso de uso: Vincular uma conta social a um usuário
  */

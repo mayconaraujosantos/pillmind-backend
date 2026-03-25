@@ -10,6 +10,8 @@ import com.pillmind.main.di.ApplicationBootstrap;
 import com.pillmind.main.di.Container;
 import com.pillmind.main.routes.AuthRoutes;
 import com.pillmind.main.routes.HealthRoutes;
+import com.pillmind.main.routes.MediaRoutes;
+import com.pillmind.main.routes.MedicineRoutes;
 import com.pillmind.main.routes.SwaggerRoutes;
 import com.pillmind.presentation.handlers.ErrorHandlers;
 
@@ -56,7 +58,9 @@ public class Main {
       // Configura rotas
       logger.info("Configurando rotas...");
       container.resolve("route.health", HealthRoutes.class).setup(app);
+      container.resolve("route.media", MediaRoutes.class).setup(app);
       container.resolve("route.auth", AuthRoutes.class).setup(app);
+      container.resolve("route.medicines", MedicineRoutes.class).setup(app);
       container.resolve("route.swagger", SwaggerRoutes.class).setup(app);
       logger.info("Rotas configuradas!");
 
@@ -64,7 +68,8 @@ public class Main {
       logger.info("Iniciando servidor na porta {}...", Env.PORT);
       app.start("0.0.0.0", Env.PORT);
       logger.info("✓ Servidor iniciado com sucesso!");
-      logger.info("Acesse: http://localhost:{}/swagger-ui", Env.PORT);
+      logger.info("Swagger UI (spec completo): http://localhost:{}/swagger", Env.PORT);
+      logger.info("Swagger UI (estático): http://localhost:{}/swagger-ui", Env.PORT);
 
     } catch (Exception e) {
       logger.error("✗ Erro ao iniciar a aplicação:", e);

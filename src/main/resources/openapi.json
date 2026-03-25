@@ -463,171 +463,211 @@
           }
         }
       }
-    }
-  },
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
-      }
-    }
-  }
-}
-        "tags": ["Authentication"],
-        "summary": "User Sign Up",
-        "description": "Register a new user account",
+    },
+    "/api/medicines": {
+      "get": {
+        "tags": ["Medicines"],
+        "summary": "Listar medicamentos",
+        "description": "Medicamentos do usuário autenticado. Envie o JWT em Authorization: Bearer <token> ou no header x-access-token.",
+        "security": [{"bearerAuth": []}],
+        "responses": {
+          "200": {
+            "description": "Lista (pode ser vazia)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/Medicine"}
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Medicines"],
+        "summary": "Criar medicamento",
+        "security": [{"bearerAuth": []}],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "password", "name"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "example": "user@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "minLength": 8,
-                    "example": "SecurePass123"
-                  },
-                  "name": {
-                    "type": "string",
-                    "example": "John Doe"
-                  }
-                }
-              }
+              "schema": {"$ref": "#/components/schemas/MedicineWriteRequest"}
             }
           }
         },
         "responses": {
           "201": {
-            "description": "User created successfully",
+            "description": "Criado",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "id": {
-                      "type": "integer",
-                      "example": 1
-                    },
-                    "email": {
-                      "type": "string",
-                      "example": "user@example.com"
-                    },
-                    "name": {
-                      "type": "string",
-                      "example": "John Doe"
-                    }
-                  }
-                }
+                "schema": {"$ref": "#/components/schemas/Medicine"}
               }
             }
           },
           "400": {
-            "description": "Validation error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "errors": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Validação ou JSON inválido"
           },
-          "409": {
-            "description": "User already exists"
+          "401": {
+            "description": "Não autorizado"
           }
         }
       }
     },
-    "/api/signin": {
-      "post": {
-        "tags": ["Authentication"],
-        "summary": "User Sign In",
-        "description": "Authenticate user and get JWT token",
+    "/api/medicines/{id}": {
+      "get": {
+        "tags": ["Medicines"],
+        "summary": "Obter medicamento por id",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Encontrado",
+            "content": {
+              "application/json": {
+                "schema": {"$ref": "#/components/schemas/Medicine"}
+              }
+            }
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Não encontrado"
+          }
+        }
+      },
+      "put": {
+        "tags": ["Medicines"],
+        "summary": "Atualizar medicamento",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
-              "schema": {
-                "type": "object",
-                "required": ["email", "password"],
-                "properties": {
-                  "email": {
-                    "type": "string",
-                    "format": "email",
-                    "example": "user@example.com"
-                  },
-                  "password": {
-                    "type": "string",
-                    "format": "password",
-                    "example": "SecurePass123"
-                  }
-                }
-              }
+              "schema": {"$ref": "#/components/schemas/MedicineWriteRequest"}
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Authentication successful",
+            "description": "Atualizado",
             "content": {
               "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "token": {
-                      "type": "string",
-                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                    },
-                    "user": {
-                      "type": "object",
-                      "properties": {
-                        "id": {
-                          "type": "integer",
-                          "example": 1
-                        },
-                        "email": {
-                          "type": "string",
-                          "example": "user@example.com"
-                        },
-                        "name": {
-                          "type": "string",
-                          "example": "John Doe"
-                        }
-                      }
-                    }
-                  }
-                }
+                "schema": {"$ref": "#/components/schemas/Medicine"}
               }
             }
           },
           "400": {
-            "description": "Validation error"
+            "description": "Validação ou JSON inválido"
           },
           "401": {
-            "description": "Invalid credentials"
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Não encontrado"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Medicines"],
+        "summary": "Excluir medicamento",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {"type": "string"}
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Removido"
+          },
+          "401": {
+            "description": "Não autorizado"
+          },
+          "404": {
+            "description": "Não encontrado"
           }
         }
       }
     }
   },
   "components": {
+    "schemas": {
+      "MedicineWriteRequest": {
+        "type": "object",
+        "required": ["name", "dosage", "frequency", "startDate"],
+        "properties": {
+          "name": {"type": "string", "example": "Paracetamol"},
+          "dosage": {"type": "string", "example": "500mg"},
+          "frequency": {
+            "type": "string",
+            "description": "Identificador de frequência (ex. twice-a-day, daily)",
+            "example": "twice-a-day"
+          },
+          "times": {
+            "type": "array",
+            "items": {"type": "string", "example": "08:00"},
+            "example": ["08:00", "20:00"]
+          },
+          "startDate": {"type": "string", "format": "date", "example": "2024-01-01"},
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "2024-12-31"
+          },
+          "notes": {"type": "string", "nullable": true},
+          "imageUrl": {"type": "string", "format": "uri", "nullable": true}
+        }
+      },
+      "Medicine": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "userId": {"type": "string"},
+          "name": {"type": "string"},
+          "dosage": {"type": "string"},
+          "frequency": {"type": "string"},
+          "times": {"type": "array", "items": {"type": "string"}},
+          "startDate": {"type": "string", "format": "date"},
+          "endDate": {"type": "string", "format": "date", "nullable": true},
+          "notes": {"type": "string", "nullable": true},
+          "imageUrl": {"type": "string", "format": "uri", "nullable": true},
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2024-01-15T10:30:00"
+          }
+        }
+      }
+    },
     "securitySchemes": {
       "bearerAuth": {
         "type": "http",

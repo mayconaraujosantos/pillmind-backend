@@ -6,18 +6,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pillmind.data.usecases.DbCreateLocalAccount;
+import com.pillmind.data.usecases.DbCreateMedicineForUser;
+import com.pillmind.data.usecases.DbDeleteMedicineForUser;
+import com.pillmind.data.usecases.DbGetMedicineForUser;
 import com.pillmind.data.usecases.DbLinkOAuthAccount;
+import com.pillmind.data.usecases.DbListMedicinesForUser;
 import com.pillmind.data.usecases.DbLoadUserById;
 import com.pillmind.data.usecases.DbLocalAuthentication;
+import com.pillmind.data.usecases.DbUpdateMedicineForUser;
 import com.pillmind.data.usecases.DbUpdateUserProfile;
 import com.pillmind.domain.usecases.CreateLocalAccount;
+import com.pillmind.domain.usecases.CreateMedicineForUser;
+import com.pillmind.domain.usecases.DeleteMedicineForUser;
+import com.pillmind.domain.usecases.GetMedicineForUser;
 import com.pillmind.domain.usecases.LinkOAuthAccount;
+import com.pillmind.domain.usecases.ListMedicinesForUser;
 import com.pillmind.domain.usecases.LoadUserById;
 import com.pillmind.domain.usecases.LocalAuthentication;
+import com.pillmind.domain.usecases.UpdateMedicineForUser;
 import com.pillmind.domain.usecases.UpdateUserProfile;
 import com.pillmind.infra.cryptography.BcryptAdapter;
 import com.pillmind.infra.cryptography.JwtAdapter;
 import com.pillmind.infra.db.postgres.LocalAccountPostgresRepository;
+import com.pillmind.infra.db.postgres.MedicinePostgresRepository;
 import com.pillmind.infra.db.postgres.OAuthAccountPostgresRepository;
 import com.pillmind.infra.db.postgres.UserPostgresRepository;
 import com.pillmind.data.protocols.storage.ObjectStorageService;
@@ -27,8 +38,11 @@ import com.pillmind.main.config.DatabaseConfig;
 import com.pillmind.main.config.Env;
 import com.pillmind.main.routes.AuthRoutes;
 import com.pillmind.main.routes.HealthRoutes;
+import com.pillmind.main.routes.MediaRoutes;
+import com.pillmind.main.routes.MedicineRoutes;
 import com.pillmind.main.routes.SwaggerRoutes;
 import com.pillmind.presentation.controllers.GoogleAuthController;
+import com.pillmind.presentation.controllers.UploadMedicineImageController;
 import com.pillmind.presentation.controllers.UploadProfilePictureController;
 import com.pillmind.presentation.validators.SignInValidation;
 import com.pillmind.presentation.validators.SignUpValidation;
@@ -115,6 +129,9 @@ public class ApplicationBootstrap {
         container.registerSingleton("repository.oauth-account", 
                 new OAuthAccountPostgresRepository(connection));
 
+        container.registerSingleton("repository.medicine",
+                new MedicinePostgresRepository(connection));
+
         // OAuth2
         container.registerSingleton("oauth.google-validator",
                 new GoogleTokenValidator(Env.GOOGLE_CLIENT_ID));
@@ -164,6 +181,31 @@ public class ApplicationBootstrap {
             var oauthAccountRepository = container.resolve("repository.oauth-account", OAuthAccountPostgresRepository.class);
             return new DbLinkOAuthAccount(userRepository, oauthAccountRepository);
         });
+
+        container.registerFactory("usecase.list-medicines-for-user", () -> {
+            var medicineRepository = container.resolve("repository.medicine", MedicinePostgresRepository.class);
+            return new DbListMedicinesForUser(medicineRepository);
+        });
+
+        container.registerFactory("usecase.get-medicine-for-user", () -> {
+            var medicineRepository = container.resolve("repository.medicine", MedicinePostgresRepository.class);
+            return new DbGetMedicineForUser(medicineRepository);
+        });
+
+        container.registerFactory("usecase.create-medicine-for-user", () -> {
+            var medicineRepository = container.resolve("repository.medicine", MedicinePostgresRepository.class);
+            return new DbCreateMedicineForUser(medicineRepository);
+        });
+
+        container.registerFactory("usecase.update-medicine-for-user", () -> {
+            var medicineRepository = container.resolve("repository.medicine", MedicinePostgresRepository.class);
+            return new DbUpdateMedicineForUser(medicineRepository);
+        });
+
+        container.registerFactory("usecase.delete-medicine-for-user", () -> {
+            var medicineRepository = container.resolve("repository.medicine", MedicinePostgresRepository.class);
+            return new DbDeleteMedicineForUser(medicineRepository);
+        });
     }
 
     /**
@@ -184,6 +226,11 @@ public class ApplicationBootstrap {
 
         container.registerSingleton("route.health", new HealthRoutes());
         container.registerSingleton("route.swagger", new SwaggerRoutes());
+
+        container.registerFactory("route.media", () -> {
+            var objectStorage = container.resolve("storage.object", ObjectStorageService.class);
+            return new MediaRoutes(objectStorage);
+        });
 
         // AuthRoutes precisa de dependências, então usa factory
         container.registerFactory("route.auth", () -> {
@@ -215,6 +262,18 @@ public class ApplicationBootstrap {
                     updateUserProfile,
                     decrypter,
                     uploadProfilePictureController);
+        });
+
+        container.registerFactory("route.medicines", () -> {
+            var decrypter = container.resolve("crypto.jwt", JwtAdapter.class);
+            var objectStorage = container.resolve("storage.object", ObjectStorageService.class);
+            var list = container.resolve("usecase.list-medicines-for-user", ListMedicinesForUser.class);
+            var get = container.resolve("usecase.get-medicine-for-user", GetMedicineForUser.class);
+            var create = container.resolve("usecase.create-medicine-for-user", CreateMedicineForUser.class);
+            var update = container.resolve("usecase.update-medicine-for-user", UpdateMedicineForUser.class);
+            var delete = container.resolve("usecase.delete-medicine-for-user", DeleteMedicineForUser.class);
+            var uploadMedicineImage = new UploadMedicineImageController(objectStorage, decrypter);
+            return new MedicineRoutes(decrypter, list, get, create, update, delete, uploadMedicineImage);
         });
     }
 

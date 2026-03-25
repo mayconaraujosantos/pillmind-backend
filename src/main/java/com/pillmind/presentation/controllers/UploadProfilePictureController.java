@@ -3,8 +3,8 @@ package com.pillmind.presentation.controllers;
 import java.io.InputStream;
 import java.util.Set;
 
-import com.pillmind.data.protocols.storage.ObjectStorageService;
 import com.pillmind.data.protocols.cryptography.Decrypter;
+import com.pillmind.data.protocols.storage.ObjectStorageService;
 import com.pillmind.domain.errors.UnauthorizedException;
 import com.pillmind.domain.errors.ValidationException;
 import com.pillmind.domain.usecases.LoadUserById;
@@ -16,11 +16,12 @@ import io.javalin.http.Context;
 import io.javalin.http.UploadedFile;
 
 /**
- * POST /api/profile/picture — multipart field {@code file} (image/jpeg, image/png, image/webp).
+ * POST /api/profile/picture — multipart field {@code file} (image/jpeg,
+ * image/png, image/webp).
  */
 public class UploadProfilePictureController implements Controller {
 
-  private static final long MAX_BYTES = 5 * 1024 * 1024;
+  private static final long MAX_BYTES = 5 * 1024L * 1024L;
   private static final Set<String> ALLOWED_TYPES = Set.of(
       "image/jpeg",
       "image/jpg",
@@ -111,10 +112,9 @@ public class UploadProfilePictureController implements Controller {
 
   private String extractAccessToken(Context ctx) {
     var authHeader = ctx.header("Authorization");
-    if (authHeader != null) {
-      if (authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
-        return authHeader.substring(7).trim();
-      }
+    if (authHeader != null && authHeader.regionMatches(true, 0, "Bearer ", 0, 7)) {
+      return authHeader.substring(7).trim();
+
     }
     return ctx.header("x-access-token");
   }
