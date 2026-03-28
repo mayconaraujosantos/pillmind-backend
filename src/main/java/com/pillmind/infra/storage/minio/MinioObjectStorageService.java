@@ -54,17 +54,22 @@ public class MinioObjectStorageService implements ObjectStorageService {
 
   @Override
   public Optional<ObjectStorageService.StreamedObject> openPublicObject(String objectKey) {
+    logger.info("openPublicObject called with key: {}", objectKey);
     if (!isConfigured()) {
+      logger.warn("MinIO is not configured");
       return Optional.empty();
     }
     String key = objectKey == null ? "" : objectKey.strip();
     if (!isAllowedPublicObjectKey(key)) {
+      logger.warn("Object key not allowed: {}", key);
       return Optional.empty();
     }
     try {
       ensureBucketAndPolicy();
+      logger.info("Calling MinIO statObject for bucket={}, object={}", bucket, key);
       var stat = client.statObject(
           StatObjectArgs.builder().bucket(bucket).object(key).build());
+      logger.info("MinIO statObject success: contentType={}, size={}", stat.contentType(), stat.size());
       var stream = client.getObject(
           GetObjectArgs.builder().bucket(bucket).object(key).build());
       String ct = stat.contentType();
@@ -72,10 +77,11 @@ public class MinioObjectStorageService implements ObjectStorageService {
         ct = "application/octet-stream";
       }
       long len = stat.size();
+      logger.info("Returning StreamedObject: contentType={}, size={}", ct, len);
       return Optional.of(
           new ObjectStorageService.StreamedObject(ct, stream, len >= 0 ? len : 0L));
     } catch (Exception e) {
-      logger.debug("MinIO openPublicObject key={}: {}", key, e.getMessage());
+      logger.warn("MinIO openPublicObject key={} failed: {}", key, e.getMessage(), e);
       return Optional.empty();
     }
   }

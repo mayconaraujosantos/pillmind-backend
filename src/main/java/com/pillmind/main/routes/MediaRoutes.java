@@ -60,23 +60,31 @@ public class MediaRoutes implements Routes {
     app.get("/api/media/medicines/{userId}/{filename}", ctx -> {
       String userId = ctx.pathParam("userId");
       String filename = ctx.pathParam("filename");
+      logger.info("Medicine media request: userId={}, filename={}", userId, filename);
+      
       if (!USER_ID.matcher(userId).matches() || !PROFILE_FILE.matcher(filename).matches()) {
+        logger.warn("Invalid paths: userId={}, filename={}", userId, filename);
         ctx.status(400);
         return;
       }
       String objectKey = ObjectStorageService.MEDICINE_PREFIX + userId + "/" + filename;
+      logger.info("Looking for object key: {}", objectKey);
+      
       var opt = objectStorage.openPublicObject(objectKey);
       if (opt.isEmpty()) {
+        logger.warn("Object not found: {}", objectKey);
         ctx.status(404);
         return;
       }
       try (var obj = opt.get()) {
+        logger.info("Found object: contentType={}, size={}", obj.contentType(), obj.sizeBytes());
         ctx.contentType(obj.contentType());
         ctx.header("Cache-Control", "public, max-age=86400");
         if (obj.sizeBytes() > 0) {
           ctx.header("Content-Length", String.valueOf(obj.sizeBytes()));
         }
         obj.inputStream().transferTo(ctx.outputStream());
+        logger.info("Successfully served object: {}", objectKey);
       } catch (Exception e) {
         logger.warn("Streaming medicine media failed: {}", e.getMessage());
         if (!ctx.res().isCommitted()) {
