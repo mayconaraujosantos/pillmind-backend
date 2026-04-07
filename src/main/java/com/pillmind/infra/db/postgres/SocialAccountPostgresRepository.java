@@ -1,354 +1,250 @@
 package com.pillmind.infra.db.postgres;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.JdbiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pillmind.data.protocols.db.SocialAccountRepository;
+import com.pillmind.domain.errors.DatabaseException;
+import com.pillmind.domain.errors.NotFoundException;
 import com.pillmind.domain.models.SocialAccount;
 
-/**
- * Implementação do repositório de SocialAccount usando PostgreSQL
- */
+@SuppressWarnings("java:S2139")
 public class SocialAccountPostgresRepository extends PostgresRepository implements SocialAccountRepository {
     private static final Logger logger = LoggerFactory.getLogger(SocialAccountPostgresRepository.class);
 
-    public SocialAccountPostgresRepository(Connection connection) {
-        super(connection);
+    private static final String SELECT_COLUMNS = """
+            SELECT id, user_id, provider, provider_user_id, email, name,
+                   profile_image_url, access_token, refresh_token, token_expiry,
+                   linked_at, is_primary
+            FROM social_accounts
+            """;
+
+    public SocialAccountPostgresRepository(Jdbi jdbi) {
+        super(jdbi);
     }
 
     @Override
     public SocialAccount add(SocialAccount socialAccount) {
-        String sql = """
-            INSERT INTO social_accounts (id, user_id, provider, provider_user_id, email, name, 
-                                       profile_image_url, access_token, refresh_token, token_expiry, 
-                                       linked_at, is_primary) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            String id = socialAccount.id() != null ? socialAccount.id() : UUID.randomUUID().toString();
-            
-            stmt.setString(1, id);
-            stmt.setString(2, socialAccount.userId());
-            stmt.setString(3, socialAccount.provider());
-            stmt.setString(4, socialAccount.providerUserId());
-            stmt.setString(5, socialAccount.email());
-            stmt.setString(6, socialAccount.name());
-            stmt.setString(7, socialAccount.profileImageUrl());
-            stmt.setString(8, socialAccount.accessToken());
-            stmt.setString(9, socialAccount.refreshToken());
-            stmt.setObject(10, socialAccount.tokenExpiry());
-            stmt.setObject(11, socialAccount.linkedAt());
-            stmt.setBoolean(12, socialAccount.isPrimary());
-
-            stmt.executeUpdate();
-            
+        String id = socialAccount.id() != null ? socialAccount.id() : UUID.randomUUID().toString();
+        try {
+            jdbi.useHandle(h -> h.createUpdate("""
+                    INSERT INTO social_accounts (id, user_id, provider, provider_user_id, email, name,
+                                               profile_image_url, access_token, refresh_token, token_expiry,
+                                               linked_at, is_primary)
+                    VALUES (:id, :userId, :provider, :providerUserId, :email, :name,
+                            :profileImageUrl, :accessToken, :refreshToken, :tokenExpiry,
+                            :linkedAt, :isPrimary)
+                    """)
+                .bind("id", id)
+                .bind("userId", socialAccount.userId())
+                .bind("provider", socialAccount.provider())
+                .bind("providerUserId", socialAccount.providerUserId())
+                .bind("email", socialAccount.email())
+                .bind("name", socialAccount.name())
+                .bind("profileImageUrl", socialAccount.profileImageUrl())
+                .bind("accessToken", socialAccount.accessToken())
+                .bind("refreshToken", socialAccount.refreshToken())
+                .bind("tokenExpiry", socialAccount.tokenExpiry())
+                .bind("linkedAt", socialAccount.linkedAt())
+                .bind("isPrimary", socialAccount.isPrimary())
+                .execute());
             return new SocialAccount(id, socialAccount.userId(), socialAccount.provider(),
-                                   socialAccount.providerUserId(), socialAccount.email(), socialAccount.name(),
-                                   socialAccount.profileImageUrl(), socialAccount.accessToken(), 
-                                   socialAccount.refreshToken(), socialAccount.tokenExpiry(),
-                                   socialAccount.linkedAt(), socialAccount.isPrimary());
-        } catch (SQLException e) {
-            logger.error("Error adding social account for user {}: {}", socialAccount.userId(), e.getMessage(), e);
-            throw new RuntimeException("Error adding social account: " + e.getMessage(), e);
+                    socialAccount.providerUserId(), socialAccount.email(), socialAccount.name(),
+                    socialAccount.profileImageUrl(), socialAccount.accessToken(),
+                    socialAccount.refreshToken(), socialAccount.tokenExpiry(),
+                    socialAccount.linkedAt(), socialAccount.isPrimary());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao criar social account para userId: " + socialAccount.userId(), e);
         }
     }
 
     @Override
     public SocialAccount update(SocialAccount socialAccount) {
-        String sql = """
-            UPDATE social_accounts 
-            SET email = ?, name = ?, profile_image_url = ?, access_token = ?, 
-                refresh_token = ?, token_expiry = ?, is_primary = ?
-            WHERE id = ?::uuid
-            """;
+        try {
+            int updated = jdbi.withHandle(h -> h.createUpdate("""
+                    UPDATE social_accounts
+                    SET email = :email, name = :name, profile_image_url = :profileImageUrl,
+                        access_token = :accessToken, refresh_token = :refreshToken,
+                        token_expiry = :tokenExpiry, is_primary = :isPrimary
+                    WHERE id = :id::uuid
+                    """)
+                .bind("email", socialAccount.email())
+                .bind("name", socialAccount.name())
+                .bind("profileImageUrl", socialAccount.profileImageUrl())
+                .bind("accessToken", socialAccount.accessToken())
+                .bind("refreshToken", socialAccount.refreshToken())
+                .bind("tokenExpiry", socialAccount.tokenExpiry())
+                .bind("isPrimary", socialAccount.isPrimary())
+                .bind("id", socialAccount.id())
+                .execute());
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, socialAccount.email());
-            stmt.setString(2, socialAccount.name());
-            stmt.setString(3, socialAccount.profileImageUrl());
-            stmt.setString(4, socialAccount.accessToken());
-            stmt.setString(5, socialAccount.refreshToken());
-            stmt.setObject(6, socialAccount.tokenExpiry());
-            stmt.setBoolean(7, socialAccount.isPrimary());
-            stmt.setString(8, socialAccount.id());
-
-            int updated = stmt.executeUpdate();
             if (updated == 0) {
-                throw new RuntimeException("Social account not found: " + socialAccount.id());
+                throw new NotFoundException("Social account não encontrada: " + socialAccount.id());
             }
-
             return socialAccount;
-        } catch (SQLException e) {
-            logger.error("Error updating social account {}: {}", socialAccount.id(), e.getMessage(), e);
-            throw new RuntimeException("Error updating social account: " + e.getMessage(), e);
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao atualizar social account: " + socialAccount.id(), e);
         }
     }
 
     @Override
     public Optional<SocialAccount> loadById(String id) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE id = ?::uuid
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, id);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToSocialAccount(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading social account by id {}: {}", id, e.getMessage(), e);
-            throw new RuntimeException("Error loading social account: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(SELECT_COLUMNS + "WHERE id = :id::uuid")
+                .bind("id", id)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social account por id: " + id, e);
         }
     }
 
     @Override
     public Optional<SocialAccount> loadByUserAndProvider(String userId, String provider) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE user_id = ? AND provider = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
-            stmt.setString(2, provider);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToSocialAccount(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading social account by user {} and provider {}: {}", 
-                        userId, provider, e.getMessage(), e);
-            throw new RuntimeException("Error loading social account: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    SELECT_COLUMNS + "WHERE user_id = :userId AND provider = :provider")
+                .bind("userId", userId)
+                .bind("provider", provider)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social account por userId e provider", e);
         }
     }
 
     @Override
     public Optional<SocialAccount> loadByProviderAndProviderUserId(String provider, String providerUserId) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE provider = ? AND provider_user_id = ?
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, provider);
-            stmt.setString(2, providerUserId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToSocialAccount(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading social account by provider {} and provider user id {}: {}", 
-                        provider, providerUserId, e.getMessage(), e);
-            throw new RuntimeException("Error loading social account: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    SELECT_COLUMNS + "WHERE provider = :provider AND provider_user_id = :providerUserId")
+                .bind("provider", provider)
+                .bind("providerUserId", providerUserId)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social account por provider e providerUserId", e);
         }
     }
 
     @Override
     public List<SocialAccount> loadByUserId(String userId) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE user_id = ?
-            ORDER BY is_primary DESC, linked_at ASC
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<SocialAccount> socialAccounts = new ArrayList<>();
-                while (rs.next()) {
-                    socialAccounts.add(mapResultSetToSocialAccount(rs));
-                }
-                return socialAccounts;
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading social accounts by user id {}: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("Error loading social accounts: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    SELECT_COLUMNS + "WHERE user_id = :userId ORDER BY is_primary DESC, linked_at ASC")
+                .bind("userId", userId)
+                .map((rs, ctx) -> mapRow(rs))
+                .list());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social accounts por userId: " + userId, e);
         }
     }
 
     @Override
     public Optional<SocialAccount> loadPrimaryByUserId(String userId) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE user_id = ? AND is_primary = true
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToSocialAccount(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading primary social account for user {}: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("Error loading primary social account: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    SELECT_COLUMNS + "WHERE user_id = :userId AND is_primary = true")
+                .bind("userId", userId)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social account primária por userId: " + userId, e);
         }
     }
 
     @Override
     public void setPrimary(String socialAccountId) {
-        String getUserIdSql = "SELECT user_id FROM social_accounts WHERE id = ?::uuid";
-        String clearPrimarySql = "UPDATE social_accounts SET is_primary = false WHERE user_id = ?";
-        String setPrimarySql = "UPDATE social_accounts SET is_primary = true WHERE id = ?::uuid";
-
         try {
-            connection.setAutoCommit(false);
+            jdbi.useTransaction(h -> {
+                String userId = h.createQuery(
+                        "SELECT user_id FROM social_accounts WHERE id = :id::uuid")
+                        .bind("id", socialAccountId)
+                        .mapTo(String.class)
+                        .findFirst()
+                        .orElseThrow(() -> new NotFoundException("Social account não encontrada: " + socialAccountId));
 
-            // Get user_id first
-            String userId;
-            try (PreparedStatement stmt = connection.prepareStatement(getUserIdSql)) {
-                stmt.setString(1, socialAccountId);
-                try (ResultSet rs = stmt.executeQuery()) {
-                    if (!rs.next()) {
-                        throw new RuntimeException("Social account not found: " + socialAccountId);
-                    }
-                    userId = rs.getString("user_id");
-                }
-            }
+                h.createUpdate("UPDATE social_accounts SET is_primary = false WHERE user_id = :userId")
+                        .bind("userId", userId)
+                        .execute();
 
-            // Clear all primary flags for this user
-            try (PreparedStatement stmt = connection.prepareStatement(clearPrimarySql)) {
-                stmt.setString(1, userId);
-                stmt.executeUpdate();
-            }
+                int updated = h.createUpdate(
+                        "UPDATE social_accounts SET is_primary = true WHERE id = :id::uuid")
+                        .bind("id", socialAccountId)
+                        .execute();
 
-            // Set the specified account as primary
-            try (PreparedStatement stmt = connection.prepareStatement(setPrimarySql)) {
-                stmt.setString(1, socialAccountId);
-                int updated = stmt.executeUpdate();
                 if (updated == 0) {
-                    throw new RuntimeException("Social account not found: " + socialAccountId);
+                    throw new NotFoundException("Social account não encontrada: " + socialAccountId);
                 }
-            }
-
-            connection.commit();
-        } catch (SQLException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException rollbackEx) {
-                logger.error("Error rolling back transaction: {}", rollbackEx.getMessage());
-            }
-            logger.error("Error setting primary social account {}: {}", socialAccountId, e.getMessage(), e);
-            throw new RuntimeException("Error setting primary social account: " + e.getMessage(), e);
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-            } catch (SQLException e) {
-                logger.error("Error resetting auto-commit: {}", e.getMessage());
-            }
+            });
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao definir social account como primária: " + socialAccountId, e);
         }
     }
 
     @Override
     public void delete(String id) {
-        String sql = "DELETE FROM social_accounts WHERE id = ?::uuid";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, id);
-            int deleted = stmt.executeUpdate();
+        try {
+            int deleted = jdbi.withHandle(h -> h.createUpdate(
+                    "DELETE FROM social_accounts WHERE id = :id::uuid")
+                .bind("id", id)
+                .execute());
             if (deleted == 0) {
-                throw new RuntimeException("Social account not found: " + id);
+                throw new NotFoundException("Social account não encontrada: " + id);
             }
-        } catch (SQLException e) {
-            logger.error("Error deleting social account {}: {}", id, e.getMessage(), e);
-            throw new RuntimeException("Error deleting social account: " + e.getMessage(), e);
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao deletar social account: " + id, e);
         }
     }
 
     @Override
     public void deleteByUserId(String userId) {
-        String sql = "DELETE FROM social_accounts WHERE user_id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            logger.error("Error deleting social accounts for user {}: {}", userId, e.getMessage(), e);
-            throw new RuntimeException("Error deleting social accounts: " + e.getMessage(), e);
+        try {
+            jdbi.useHandle(h -> h.createUpdate(
+                    "DELETE FROM social_accounts WHERE user_id = :userId")
+                .bind("userId", userId)
+                .execute());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao deletar social accounts por userId: " + userId, e);
         }
     }
 
     @Override
     public boolean existsByUserAndProvider(String userId, String provider) {
-        String sql = "SELECT 1 FROM social_accounts WHERE user_id = ? AND provider = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, userId);
-            stmt.setString(2, provider);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            logger.error("Error checking social account existence for user {} and provider {}: {}", 
-                        userId, provider, e.getMessage(), e);
-            throw new RuntimeException("Error checking social account existence: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    "SELECT 1 FROM social_accounts WHERE user_id = :userId AND provider = :provider")
+                .bind("userId", userId)
+                .bind("provider", provider)
+                .mapTo(Integer.class)
+                .findFirst()
+                .isPresent());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao verificar existência de social account", e);
         }
     }
 
     @Override
     public List<SocialAccount> loadByProvider(String provider) {
-        String sql = """
-            SELECT id, user_id, provider, provider_user_id, email, name, 
-                   profile_image_url, access_token, refresh_token, token_expiry, 
-                   linked_at, is_primary
-            FROM social_accounts WHERE provider = ?
-            ORDER BY linked_at DESC
-            """;
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, provider);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                List<SocialAccount> socialAccounts = new ArrayList<>();
-                while (rs.next()) {
-                    socialAccounts.add(mapResultSetToSocialAccount(rs));
-                }
-                return socialAccounts;
-            }
-        } catch (SQLException e) {
-            logger.error("Error loading social accounts by provider {}: {}", provider, e.getMessage(), e);
-            throw new RuntimeException("Error loading social accounts: " + e.getMessage(), e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    SELECT_COLUMNS + "WHERE provider = :provider ORDER BY linked_at DESC")
+                .bind("provider", provider)
+                .map((rs, ctx) -> mapRow(rs))
+                .list());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar social accounts por provider: " + provider, e);
         }
     }
 
-    private SocialAccount mapResultSetToSocialAccount(ResultSet rs) throws SQLException {
+    private SocialAccount mapRow(java.sql.ResultSet rs) throws java.sql.SQLException {
         return new SocialAccount(
             rs.getString("id"),
             rs.getString("user_id"),
