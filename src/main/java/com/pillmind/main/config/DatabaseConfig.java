@@ -1,9 +1,8 @@
 package com.pillmind.main.config;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
 import javax.sql.DataSource;
+
+import org.jdbi.v3.core.Jdbi;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,11 +11,14 @@ import com.zaxxer.hikari.HikariDataSource;
  * Configuração do banco de dados PostgreSQL
  */
 public class DatabaseConfig {
+  private static final String CONNECTION_TEST_QUERY = "SELECT 1";
+
   private DatabaseConfig() {
     // Utility class
   }
 
   private static HikariDataSource dataSource;
+  private static Jdbi jdbi;
 
   static {
     HikariConfig config = new HikariConfig();
@@ -28,16 +30,20 @@ public class DatabaseConfig {
     config.setConnectionTimeout(30000);
     config.setIdleTimeout(600000);
     config.setMaxLifetime(1800000);
+    config.setPoolName("pillmind-hikari-pool");
+    config.setConnectionTestQuery(CONNECTION_TEST_QUERY);
+    config.setInitializationFailTimeout(-1);
 
     dataSource = new HikariDataSource(config);
+    jdbi = Jdbi.create(dataSource);
   }
 
   public static DataSource getDataSource() {
     return dataSource;
   }
 
-  public static Connection getConnection() throws SQLException {
-    return dataSource.getConnection();
+  public static Jdbi getJdbi() {
+    return jdbi;
   }
 
   public static void close() {
