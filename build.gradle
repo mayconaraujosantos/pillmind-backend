@@ -43,6 +43,10 @@ dependencies {
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation("org.flywaydb:flyway-core:9.22.0")
 
+    // Jdbi 3
+    implementation("org.jdbi:jdbi3-core:3.45.4")
+    implementation("org.jdbi:jdbi3-postgres:3.45.4")
+
     // JSON
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
