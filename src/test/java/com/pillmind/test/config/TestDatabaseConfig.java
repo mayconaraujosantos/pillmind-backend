@@ -1,16 +1,17 @@
 package com.pillmind.test.config;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import org.flywaydb.core.Flyway;
+import org.h2.jdbcx.JdbcConnectionPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Configuração do banco H2 em memória para testes
- * H2 oferece performance excelente e é compatível com PostgreSQL
  */
 public class TestDatabaseConfig {
     private static final Logger logger = LoggerFactory.getLogger(TestDatabaseConfig.class);
@@ -19,30 +20,20 @@ public class TestDatabaseConfig {
     private static final String H2_USER = "sa";
     private static final String H2_PASSWORD = "";
 
-    private static Connection connection;
+    private static JdbcConnectionPool dataSource;
 
     /**
-     * Inicializa o banco H2 com migrations
+     * Inicializa o banco H2 com migrations e retorna o DataSource
      */
-    public static Connection initializeDatabase() throws SQLException {
+    public static DataSource initializeDatabase() {
         logger.info("Inicializando banco H2 em memória...");
 
-        // Carrega o driver H2 explicitamente
-        try {
-            Class.forName("org.h2.Driver");
-            logger.debug("Driver H2 carregado");
-        } catch (ClassNotFoundException e) {
-            throw new SQLException("Driver H2 não encontrado no classpath", e);
-        }
-
-        // Cria conexão
-        connection = DriverManager.getConnection(H2_URL, H2_USER, H2_PASSWORD);
+        dataSource = JdbcConnectionPool.create(H2_URL, H2_USER, H2_PASSWORD);
         logger.info("✓ Banco H2 conectado");
 
-        // Executa migrations
         runMigrations();
 
-        return connection;
+        return dataSource;
     }
 
     /**
@@ -62,43 +53,32 @@ public class TestDatabaseConfig {
     }
 
     /**
-     * Obtém a conexão existente
-     */
-    public static Connection getConnection() {
-        if (connection == null) {
-            throw new IllegalStateException(
-                    "Banco de dados não foi inicializado. Chame initializeDatabase() primeiro.");
-        }
-        return connection;
-    }
-
-    /**
      * Limpa dados de uma tabela
      */
     public static void cleanTable(String tableName) throws SQLException {
-        try (var stmt = connection.createStatement()) {
+        try (Connection conn = dataSource.getConnection();
+             var stmt = conn.createStatement()) {
             stmt.execute("DELETE FROM " + tableName);
             logger.debug("Tabela '{}' foi limpa", tableName);
         }
     }
 
     /**
-     * Limpa todos os dados das tabelas - Nova estrutura
+     * Limpa todos os dados das tabelas
      */
     public static void cleanAllTables() throws SQLException {
         logger.debug("Limpando todas as tabelas...");
-        // Ordem de limpeza para respeitar foreign keys
         cleanTable("oauth_accounts");
         cleanTable("local_accounts");
         cleanTable("users");
     }
 
     /**
-     * Fecha a conexão
+     * Fecha o pool de conexões
      */
-    public static void closeDatabase() throws SQLException {
-        if (connection != null && !connection.isClosed()) {
-            connection.close();
+    public static void closeDatabase() {
+        if (dataSource != null) {
+            dataSource.dispose();
             logger.info("Banco H2 fechado");
         }
     }

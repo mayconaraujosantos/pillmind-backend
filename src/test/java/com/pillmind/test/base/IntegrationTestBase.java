@@ -5,6 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -18,17 +20,15 @@ import com.pillmind.test.config.TestDatabaseConfig;
  */
 public abstract class IntegrationTestBase {
     protected static Container container;
-    protected static Connection connection;
+    protected static DataSource dataSource;
 
     @BeforeAll
-    static void setUpDatabase() throws SQLException {
-        // Inicializa banco H2
-        connection = TestDatabaseConfig.initializeDatabase();
+    static void setUpDatabase() {
+        dataSource = TestDatabaseConfig.initializeDatabase();
 
-        // Bootstrap da aplicação com banco de teste (H2)
         try {
             ApplicationBootstrap bootstrap = new ApplicationBootstrap();
-            bootstrap.bootstrap(connection); // Passa a conexão do H2
+            bootstrap.bootstrap(dataSource);
             container = bootstrap.getContainer();
         } catch (Exception e) {
             throw new RuntimeException("Erro ao inicializar bootstrap", e);
@@ -44,8 +44,9 @@ public abstract class IntegrationTestBase {
      * Helper para buscar valor do banco
      */
     protected <T> T queryOne(String sql, Class<T> type) throws SQLException {
-        try (Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 return rs.getObject(1, type);
             }
@@ -62,8 +63,9 @@ public abstract class IntegrationTestBase {
             sql += " WHERE " + whereClause;
         }
 
-        try (Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -80,8 +82,9 @@ public abstract class IntegrationTestBase {
             sql += " WHERE " + whereClause;
         }
 
-        try (Statement stmt = connection.createStatement();
-                ResultSet rs = stmt.executeQuery(sql)) {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
             if (rs.next()) {
                 return rs.getInt(1);
             }
@@ -93,7 +96,8 @@ public abstract class IntegrationTestBase {
      * Helper para executar SQL
      */
     protected void executeSql(String sql) throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
             stmt.execute(sql);
         }
     }
