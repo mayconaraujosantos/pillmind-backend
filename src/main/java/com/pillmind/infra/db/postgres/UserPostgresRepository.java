@@ -1,169 +1,140 @@
 package com.pillmind.infra.db.postgres;
 
-import java.sql.Connection;
 import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Optional;
 
+import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.JdbiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.pillmind.data.protocols.db.UserRepository;
+import com.pillmind.domain.errors.DatabaseException;
+import com.pillmind.domain.errors.NotFoundException;
 import com.pillmind.domain.models.Gender;
 import com.pillmind.domain.models.User;
 
-/**
- * Implementação do repositório de User usando PostgreSQL
- */
 public class UserPostgresRepository extends PostgresRepository implements UserRepository {
     private static final Logger logger = LoggerFactory.getLogger(UserPostgresRepository.class);
 
-    public UserPostgresRepository(Connection connection) {
-        super(connection);
+    public UserPostgresRepository(Jdbi jdbi) {
+        super(jdbi);
     }
 
     @Override
     public User add(User user) {
-        String sql = "INSERT INTO users (id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, user.id());
-            stmt.setString(2, user.name());
-            stmt.setString(3, user.email());
-            stmt.setDate(4, user.dateOfBirth() != null ? Date.valueOf(user.dateOfBirth()) : null);
-            stmt.setString(5, user.gender() != null ? user.gender().name() : null);
-            stmt.setString(6, user.pictureUrl());
-            stmt.setBoolean(7, user.emailVerified());
-            stmt.setObject(8, user.createdAt());
-            stmt.setObject(9, user.updatedAt());
-
-            stmt.executeUpdate();
+        try {
+            jdbi.useHandle(h -> h.createUpdate(
+                    "INSERT INTO users (id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at) " +
+                    "VALUES (:id, :name, :email, :dateOfBirth, :gender, :pictureUrl, :emailVerified, :createdAt, :updatedAt)")
+                .bind("id", user.id())
+                .bind("name", user.name())
+                .bind("email", user.email())
+                .bind("dateOfBirth", user.dateOfBirth() != null ? Date.valueOf(user.dateOfBirth()) : null)
+                .bind("gender", user.gender() != null ? user.gender().name() : null)
+                .bind("pictureUrl", user.pictureUrl())
+                .bind("emailVerified", user.emailVerified())
+                .bind("createdAt", Timestamp.valueOf(user.createdAt()))
+                .bind("updatedAt", Timestamp.valueOf(user.updatedAt()))
+                .execute());
             logger.debug("✓ User created with id: {}", user.id());
             return user;
-        } catch (SQLException e) {
-            logger.error("Error adding user with email {}: {}", user.email(), e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao criar usuário", e);
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao criar usuário", e);
         }
     }
 
     @Override
     public User update(User user) {
-        String sql = "UPDATE users SET name = ?, email = ?, date_of_birth = ?, gender = ?, picture_url = ?, email_verified = ?, updated_at = ? WHERE id = ?";
+        try {
+            int rowsAffected = jdbi.withHandle(h -> h.createUpdate(
+                    "UPDATE users SET name = :name, email = :email, date_of_birth = :dateOfBirth, " +
+                    "gender = :gender, picture_url = :pictureUrl, email_verified = :emailVerified, updated_at = :updatedAt " +
+                    "WHERE id = :id")
+                .bind("name", user.name())
+                .bind("email", user.email())
+                .bind("dateOfBirth", user.dateOfBirth() != null ? Date.valueOf(user.dateOfBirth()) : null)
+                .bind("gender", user.gender() != null ? user.gender().name() : null)
+                .bind("pictureUrl", user.pictureUrl())
+                .bind("emailVerified", user.emailVerified())
+                .bind("updatedAt", Timestamp.valueOf(user.updatedAt()))
+                .bind("id", user.id())
+                .execute());
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, user.name());
-            stmt.setString(2, user.email());
-            stmt.setDate(3, user.dateOfBirth() != null ? Date.valueOf(user.dateOfBirth()) : null);
-            stmt.setString(4, user.gender() != null ? user.gender().name() : null);
-            stmt.setString(5, user.pictureUrl());
-            stmt.setBoolean(6, user.emailVerified());
-            stmt.setObject(7, user.updatedAt());
-            stmt.setString(8, user.id());
-
-            int rowsAffected = stmt.executeUpdate();
             if (rowsAffected == 0) {
-                logger.warn("No user found with id: {}", user.id());
-                throw new RuntimeException("Usuário não encontrado");
+                throw new NotFoundException("Usuário não encontrado: " + user.id());
             }
-
             logger.debug("✓ User updated with id: {}", user.id());
             return user;
-        } catch (SQLException e) {
-            logger.error("Error updating user with id {}: {}", user.id(), e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao atualizar usuário", e);
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao atualizar usuário", e);
         }
     }
 
     @Override
     public Optional<User> findById(String id) {
-        String sql = "SELECT id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at " +
-                     "FROM users WHERE id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, id);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToUser(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding user by id {}: {}", id, e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao buscar usuário", e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    "SELECT id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at " +
+                    "FROM users WHERE id = :id")
+                .bind("id", id)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar usuário por id: " + id, e);
         }
     }
 
     @Override
     public Optional<User> findByEmail(String email) {
-        String sql = "SELECT id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at " +
-                     "FROM users WHERE email = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, email);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return Optional.of(mapResultSetToUser(rs));
-                }
-                return Optional.empty();
-            }
-        } catch (SQLException e) {
-            logger.error("Error finding user by email {}: {}", email, e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao buscar usuário", e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    "SELECT id, name, email, date_of_birth, gender, picture_url, email_verified, created_at, updated_at " +
+                    "FROM users WHERE email = :email")
+                .bind("email", email)
+                .map((rs, ctx) -> mapRow(rs))
+                .findFirst());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao buscar usuário por email", e);
         }
     }
 
     @Override
     public boolean emailExists(String email) {
-        String sql = "SELECT 1 FROM users WHERE email = ? LIMIT 1";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, email);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next();
-            }
-        } catch (SQLException e) {
-            logger.error("Error checking if email exists {}: {}", email, e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao verificar email", e);
+        try {
+            return jdbi.withHandle(h -> h.createQuery(
+                    "SELECT 1 FROM users WHERE email = :email LIMIT 1")
+                .bind("email", email)
+                .mapTo(Integer.class)
+                .findFirst()
+                .isPresent());
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao verificar existência de email", e);
         }
     }
 
     @Override
     public boolean delete(String id) {
-        String sql = "DELETE FROM users WHERE id = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, id);
-
-            int rowsAffected = stmt.executeUpdate();
-            boolean deleted = rowsAffected > 0;
-            
-            if (deleted) {
+        try {
+            int rowsAffected = jdbi.withHandle(h -> h.createUpdate(
+                    "DELETE FROM users WHERE id = :id")
+                .bind("id", id)
+                .execute());
+            if (rowsAffected > 0) {
                 logger.debug("✓ User deleted with id: {}", id);
-            } else {
-                logger.warn("No user found for deletion with id: {}", id);
             }
-            
-            return deleted;
-        } catch (SQLException e) {
-            logger.error("Error deleting user with id {}: {}", id, e.getMessage(), e);
-            throw new RuntimeException("Erro interno do servidor ao deletar usuário", e);
+            return rowsAffected > 0;
+        } catch (JdbiException e) {
+            throw new DatabaseException("Erro ao deletar usuário", e);
         }
     }
 
-    /**
-     * Mapeia ResultSet para entidade User
-     */
-    private User mapResultSetToUser(ResultSet rs) throws SQLException {
+    private User mapRow(java.sql.ResultSet rs) throws java.sql.SQLException {
         Date dateOfBirth = rs.getDate("date_of_birth");
         LocalDate localDateOfBirth = dateOfBirth != null ? dateOfBirth.toLocalDate() : null;
-        
+
         String genderStr = rs.getString("gender");
         Gender gender = genderStr != null ? Gender.fromString(genderStr) : null;
 
