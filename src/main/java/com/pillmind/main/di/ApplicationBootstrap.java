@@ -1,7 +1,8 @@
 package com.pillmind.main.di;
 
-import java.sql.Connection;
+import javax.sql.DataSource;
 
+import org.jdbi.v3.core.Jdbi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,52 +57,32 @@ public class ApplicationBootstrap {
      */
     public void bootstrap() throws Exception {
         logger.info("Iniciando bootstrap da aplicação...");
-
-        // Registra componentes de infraestrutura
-        registerInfrastructure(null);
-
-        // Registra casos de uso (use cases)
+        registerInfrastructure(DatabaseConfig.getDataSource());
         registerUseCases();
-
-        // Registra validadores
         registerValidators();
-
-        // Registra rotas
         registerRoutes();
-
         logger.info("✓ Bootstrap concluído com sucesso!");
     }
 
     /**
-     * Inicializa com conexão customizada (para testes)
+     * Inicializa com DataSource customizado (para testes)
      */
-    public void bootstrap(Connection customConnection) throws Exception {
-        logger.info("Iniciando bootstrap da aplicação com conexão customizada...");
-
-        // Registra componentes de infraestrutura com conexão customizada
-        registerInfrastructure(customConnection);
-
-        // Registra casos de uso (use cases)
+    public void bootstrap(DataSource customDataSource) throws Exception {
+        logger.info("Iniciando bootstrap da aplicação com DataSource customizado...");
+        registerInfrastructure(customDataSource);
         registerUseCases();
-
-        // Registra validadores
         registerValidators();
-
-        // Registra rotas
         registerRoutes();
-
         logger.info("✓ Bootstrap concluído com sucesso!");
     }
 
     /**
      * Registra componentes de infraestrutura
      */
-    private void registerInfrastructure(Connection customConnection) throws Exception {
+    private void registerInfrastructure(DataSource dataSource) throws Exception {
         logger.debug("Registrando componentes de infraestrutura...");
 
-        // Database Connection (Singleton) - usa customConnection se fornecida
-        Connection connection = customConnection != null ? customConnection : DatabaseConfig.getConnection();
-        container.registerSingleton("database.connection", connection);
+        Jdbi jdbi = Jdbi.create(dataSource);
 
         // Cryptography
         container.registerSingleton("crypto.hasher",
@@ -110,18 +91,18 @@ public class ApplicationBootstrap {
         container.registerSingleton("crypto.jwt",
                 new JwtAdapter(Env.JWT_SECRET, Env.JWT_EXPIRATION_IN_MS));
 
-        // Repositories - Nova estrutura
+        // Repositories
         container.registerSingleton("repository.user",
-                new UserPostgresRepository(connection));
+                new UserPostgresRepository(jdbi));
 
         container.registerSingleton("repository.local-account",
-                new LocalAccountPostgresRepository(connection));
+                new LocalAccountPostgresRepository(jdbi));
 
         container.registerSingleton("repository.oauth-account",
-                new OAuthAccountPostgresRepository(connection));
+                new OAuthAccountPostgresRepository(jdbi));
 
         container.registerSingleton("repository.user-image",
-                new UserImagePostgresRepository(connection));
+                new UserImagePostgresRepository(jdbi));
 
         ImageStorageGateway imageStorageGateway = "cloudflare".equalsIgnoreCase(Env.IMAGE_STORAGE_PROVIDER)
                 ? new CloudflareImagesGateway()
