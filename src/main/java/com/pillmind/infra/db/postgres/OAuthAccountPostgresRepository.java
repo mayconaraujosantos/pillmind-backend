@@ -1,5 +1,7 @@
 package com.pillmind.infra.db.postgres;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
@@ -213,7 +215,7 @@ public class OAuthAccountPostgresRepository extends PostgresRepository implement
         }
     }
 
-    private OAuthAccount mapRow(java.sql.ResultSet rs) throws java.sql.SQLException {
+    private OAuthAccount mapRow(ResultSet rs) throws SQLException {
         return new OAuthAccount(
             rs.getString("id"),
             rs.getString("user_id"),
